@@ -23,6 +23,7 @@ public partial class IslandWindow : Window
     readonly DispatcherTimer _shrink = new() { Interval = TimeSpan.FromMilliseconds(900) }; // waits for the closing animation
     readonly DispatcherTimer _peek = new() { Interval = TimeSpan.FromSeconds(6) };
     Hotkey? _hotkey;
+    TrayIcon? _tray;
     bool _open;
     Backdrop? _backdrop;
     FullscreenWatcher? _fullscreen;
@@ -61,11 +62,9 @@ public partial class IslandWindow : Window
         SourceInitialized += (_, _) =>
         {
             _hotkey = new Hotkey(HwndSource.FromHwnd(new WindowInteropHelper(this).Handle));
-            _hotkey.Pressed += () =>
-            {
-                if (_fullscreen?.IsFullscreen == true) return;
-                if (_open) { _peek.Stop(); Collapse(); } else { Expand(); _peek.Start(); }
-            };
+            _hotkey.Pressed += TogglePeek;
+            _tray = new TrayIcon(TogglePeek, Application.Current.Shutdown);
+            Application.Current.Exit += (_, _) => _tray.Dispose();
             _hotkey.Register(SettingsStore.Current.Hotkey);
             SettingsStore.Current.HotkeyChanged += () => _hotkey.Register(SettingsStore.Current.Hotkey);
         };
@@ -77,6 +76,12 @@ public partial class IslandWindow : Window
             _fullscreen.Activity += () => _backdrop!.Poke();
             SetHidden(_fullscreen.IsFullscreen);
         };
+    }
+
+    void TogglePeek()
+    {
+        if (_fullscreen?.IsFullscreen == true) return;
+        if (_open) { _peek.Stop(); Collapse(); } else { Expand(); _peek.Start(); }
     }
 
     void Expand()

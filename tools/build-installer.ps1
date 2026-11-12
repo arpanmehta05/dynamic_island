@@ -20,11 +20,13 @@ if ($LASTEXITCODE) { throw 'publish failed' }
 
 Copy-Item (Join-Path $PSScriptRoot 'install-app.ps1')   $payload
 Copy-Item (Join-Path $PSScriptRoot 'uninstall-app.ps1') $payload
+Copy-Item (Join-Path $PSScriptRoot 'enable-claude-approvals.ps1') $payload
+Copy-Item (Join-Path $PSScriptRoot 'enable-vlc-controls.ps1') $payload
 [IO.File]::WriteAllText((Join-Path $payload 'install.cmd'), "@echo off
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"%~dp0install-app.ps1`" %*
 ", (New-Object Text.ASCIIEncoding))
 
-$files = 'DynamicIsland.exe', 'install-app.ps1', 'uninstall-app.ps1', 'install.cmd'
+$files = 'DynamicIsland.exe', 'install-app.ps1', 'uninstall-app.ps1', 'enable-claude-approvals.ps1', 'enable-vlc-controls.ps1', 'install.cmd'
 foreach ($f in $files) { Copy-Item (Join-Path $payload $f) $stage }
 $fileStrings = ($files | ForEach-Object -Begin { $i = 0 } -Process { "FILE$i=`"$_`""; $i++ }) -join "`r`n"
 $fileRefs    = ($files | ForEach-Object -Begin { $i = 0 } -Process { "%FILE$i%="; $i++ }) -join "`r`n"

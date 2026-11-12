@@ -15,7 +15,7 @@
     <Company>Personal</Company>
     <Description>A glass dynamic island for the top of the screen: media, assistants, screenshots, clipboard, ports and power.</Description>
     <Copyright>Personal project</Copyright>
-    <Version>1.2.0</Version>
+    <Version>1.3.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

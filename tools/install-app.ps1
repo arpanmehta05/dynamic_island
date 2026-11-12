@@ -6,7 +6,7 @@ param([string]$Source = $PSScriptRoot, [switch]$Quiet)
 
 $ErrorActionPreference = 'Stop'
 $name    = 'Dynamic Island'
-$version = '1.2.0'
+$version = '1.3.0'
 $dir     = Join-Path $env:LOCALAPPDATA 'Programs\DynamicIsland'
 $exe     = Join-Path $dir 'DynamicIsland.exe'
 $run     = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
@@ -36,7 +36,7 @@ try {
 
     New-Item -ItemType Directory -Path $dir -Force | Out-Null
     Copy-Item (Join-Path $Source 'DynamicIsland.exe') $exe -Force
-    foreach ($f in 'uninstall-app.ps1') { if (Test-Path (Join-Path $Source $f)) { Copy-Item (Join-Path $Source $f) $dir -Force } }
+    foreach ($f in 'uninstall-app.ps1', 'enable-claude-approvals.ps1', 'enable-vlc-controls.ps1') { if (Test-Path (Join-Path $Source $f)) { Copy-Item (Join-Path $Source $f) $dir -Force } }
 
     # older development installs lived in %LOCALAPPDATA%\DynamicIsland: remove the stale program file (its data folder stays)
     $old = Join-Path $env:LOCALAPPDATA 'DynamicIsland\DynamicIsland.exe'
