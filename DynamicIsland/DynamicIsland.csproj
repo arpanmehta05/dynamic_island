@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework> <!-- Windows media (SMTC) APIs -->
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms> <!-- only for System.Drawing screen capture -->
+
+    <!-- Identity: this is what Task Manager, Settings > Apps and the Startup list show -->
+    <ApplicationIcon>App.ico</ApplicationIcon>
+    <AssemblyTitle>Dynamic Island</AssemblyTitle> <!-- becomes the file description: the name Task Manager lists -->
+    <Product>Dynamic Island</Product>
+    <Company>Personal</Company>
+    <Description>A glass dynamic island for the top of the screen: media, assistants, screenshots, clipboard, ports and power.</Description>
+    <Copyright>Personal project</Copyright>
+    <Version>1.2.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Management" Version="8.0.0" /> <!-- brightness change events (WMI) -->
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Fonts\*.ttf" />
+    <Resource Include="Shaders\LiquidGlass.ps" />
+  </ItemGroup>
+
+</Project>

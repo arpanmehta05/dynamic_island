@@ -1,0 +1,116 @@
+<UserControl x:Class="DynamicIsland.Views.PetControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Width="78" Height="64" SnapsToDevicePixels="True" UseLayoutRounding="True">
+
+    <UserControl.Resources>
+        <!-- Idle: breathing, blinking, glancing about, an occasional wave and a twinkle. Loops of different lengths drift apart, so it never looks mechanical. -->
+        <Storyboard x:Key="Idle" Timeline.DesiredFrameRate="20">
+            <DoubleAnimation Storyboard.TargetName="BreathT" Storyboard.TargetProperty="ScaleY" From="1" To="1.07" Duration="0:0:1.8" AutoReverse="True" RepeatBehavior="Forever"/>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="BlinkT" Storyboard.TargetProperty="ScaleY" RepeatBehavior="Forever">
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="1"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:4.1" Value="0.1"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:4.25" Value="1"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:4.4" Value="1"/>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="LookT" Storyboard.TargetProperty="X" RepeatBehavior="Forever">
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="0"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:2.5" Value="-4"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:4" Value="0"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:6" Value="4"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:7.5" Value="0"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:9" Value="0"/>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="ArmRT" Storyboard.TargetProperty="Y" RepeatBehavior="Forever">
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="0"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:9" Value="-4"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:9.3" Value="0"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:9.6" Value="-4"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:9.9" Value="0"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:13" Value="0"/>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="Spark" Storyboard.TargetProperty="Opacity" RepeatBehavior="Forever">
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="0"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:7" Value="1"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:7.6" Value="0.4"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:8.2" Value="1"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:8.8" Value="0"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:11" Value="0"/>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+
+        <!-- Working: typing on a little keyboard, bobbing, with "thinking" dots above -->
+        <Storyboard x:Key="Working" Timeline.DesiredFrameRate="20">
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="BobT" Storyboard.TargetProperty="Y" RepeatBehavior="Forever">
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="0"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.25" Value="-2"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.5" Value="0"/>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="ArmLT" Storyboard.TargetProperty="Y" RepeatBehavior="Forever">
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="0"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.25" Value="4"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.5" Value="0"/>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="ArmRT" Storyboard.TargetProperty="Y" RepeatBehavior="Forever">
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="4"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.25" Value="0"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.5" Value="4"/>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimation Storyboard.TargetName="Keyboard" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.01"/>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="Dot1" Storyboard.TargetProperty="Opacity" RepeatBehavior="Forever">
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="1"/><DiscreteDoubleKeyFrame KeyTime="0:0:0.4" Value="0.25"/><DiscreteDoubleKeyFrame KeyTime="0:0:1.2" Value="0.25"/>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="Dot2" Storyboard.TargetProperty="Opacity" RepeatBehavior="Forever">
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="0.25"/><DiscreteDoubleKeyFrame KeyTime="0:0:0.4" Value="1"/><DiscreteDoubleKeyFrame KeyTime="0:0:0.8" Value="0.25"/><DiscreteDoubleKeyFrame KeyTime="0:0:1.2" Value="0.25"/>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="Dot3" Storyboard.TargetProperty="Opacity" RepeatBehavior="Forever">
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="0.25"/><DiscreteDoubleKeyFrame KeyTime="0:0:0.8" Value="1"/><DiscreteDoubleKeyFrame KeyTime="0:0:1.2" Value="0.25"/>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+
+        <!-- Sleeping (the app isn't running): eyes shut, slow breathing, drifting "z" -->
+        <Storyboard x:Key="Sleeping" Timeline.DesiredFrameRate="15">
+            <DoubleAnimation Storyboard.TargetName="BlinkT" Storyboard.TargetProperty="ScaleY" To="0.12" Duration="0:0:0.01"/>
+            <DoubleAnimation Storyboard.TargetName="BreathT" Storyboard.TargetProperty="ScaleY" From="1" To="1.05" Duration="0:0:2.6" AutoReverse="True" RepeatBehavior="Forever"/>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="Zzz" Storyboard.TargetProperty="Opacity" RepeatBehavior="Forever">
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="0"/><DiscreteDoubleKeyFrame KeyTime="0:0:0.5" Value="1"/><DiscreteDoubleKeyFrame KeyTime="0:0:2.6" Value="0"/><DiscreteDoubleKeyFrame KeyTime="0:0:3.2" Value="0"/>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="ZzzT" Storyboard.TargetProperty="Y" RepeatBehavior="Forever">
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="0"/><DiscreteDoubleKeyFrame KeyTime="0:0:0.8" Value="-3"/><DiscreteDoubleKeyFrame KeyTime="0:0:1.6" Value="-6"/><DiscreteDoubleKeyFrame KeyTime="0:0:2.4" Value="-9"/><DiscreteDoubleKeyFrame KeyTime="0:0:3.2" Value="-9"/>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+    </UserControl.Resources>
+
+    <Canvas>
+        <!-- thinking dots / twinkle / zzz live above the creature -->
+        <Ellipse x:Name="Dot1" Canvas.Left="26" Canvas.Top="8" Width="5" Height="5" Fill="#FFE2D3" Opacity="0"/>
+        <Ellipse x:Name="Dot2" Canvas.Left="36" Canvas.Top="8" Width="5" Height="5" Fill="#FFE2D3" Opacity="0"/>
+        <Ellipse x:Name="Dot3" Canvas.Left="46" Canvas.Top="8" Width="5" Height="5" Fill="#FFE2D3" Opacity="0"/>
+        <TextBlock x:Name="Spark" Text="&#x2726;" FontFamily="Segoe UI Symbol" FontSize="14" Foreground="#FFD9B5" Canvas.Left="58" Canvas.Top="4" Opacity="0"/>
+        <TextBlock x:Name="Zzz" Text="z" FontFamily="Segoe UI" FontStyle="Italic" FontWeight="SemiBold" FontSize="13" Foreground="#FFD9B5" Canvas.Left="58" Canvas.Top="14" Opacity="0">
+            <TextBlock.RenderTransform><TranslateTransform x:Name="ZzzT"/></TextBlock.RenderTransform>
+        </TextBlock>
+
+        <Canvas x:Name="Rig" Canvas.Left="11" Canvas.Top="24" Width="56" Height="40" RenderTransformOrigin="0.5,0.9">
+            <Canvas.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform x:Name="BreathT"/>
+                    <TranslateTransform x:Name="BobT"/>
+                </TransformGroup>
+            </Canvas.RenderTransform>
+            <Canvas x:Name="Keyboard" Opacity="0"/>
+            <Canvas x:Name="Legs"/>
+            <Canvas x:Name="Body"/>
+            <Canvas x:Name="ArmL"><Canvas.RenderTransform><TranslateTransform x:Name="ArmLT"/></Canvas.RenderTransform></Canvas>
+            <Canvas x:Name="ArmR"><Canvas.RenderTransform><TranslateTransform x:Name="ArmRT"/></Canvas.RenderTransform></Canvas>
+            <Canvas x:Name="Eyes" Width="56" Height="36" RenderTransformOrigin="0.5,0.39">
+                <Canvas.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform x:Name="BlinkT"/>
+                        <TranslateTransform x:Name="LookT"/>
+                    </TransformGroup>
+                </Canvas.RenderTransform>
+            </Canvas>
+        </Canvas>
+    </Canvas>
+</UserControl>

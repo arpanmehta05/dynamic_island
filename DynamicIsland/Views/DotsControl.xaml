@@ -1,0 +1,26 @@
+﻿<UserControl x:Class="DynamicIsland.Views.DotsControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Width="25" Height="6" UseLayoutRounding="True">
+
+    <UserControl.Resources>
+        <!-- One shared, slow clock for all three dots: they light up in turn. Stepped keyframes at 2 fps keep redraws to a minimum. -->
+        <Storyboard x:Key="Pulse" Timeline.DesiredFrameRate="2" RepeatBehavior="Forever">
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="D1" Storyboard.TargetProperty="Opacity">
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="1"/><DiscreteDoubleKeyFrame KeyTime="0:0:0.5" Value="0.25"/><DiscreteDoubleKeyFrame KeyTime="0:0:1.5" Value="0.25"/>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="D2" Storyboard.TargetProperty="Opacity">
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="0.25"/><DiscreteDoubleKeyFrame KeyTime="0:0:0.5" Value="1"/><DiscreteDoubleKeyFrame KeyTime="0:0:1.0" Value="0.25"/><DiscreteDoubleKeyFrame KeyTime="0:0:1.5" Value="0.25"/>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="D3" Storyboard.TargetProperty="Opacity">
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="0.25"/><DiscreteDoubleKeyFrame KeyTime="0:0:1.0" Value="1"/><DiscreteDoubleKeyFrame KeyTime="0:0:1.5" Value="0.25"/>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+    </UserControl.Resources>
+
+    <StackPanel Orientation="Horizontal">
+        <Ellipse x:Name="D1" Width="6" Height="6" Margin="0,0,3,0" Opacity="0.25" Fill="{Binding Fill, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+        <Ellipse x:Name="D2" Width="6" Height="6" Margin="0,0,3,0" Opacity="0.25" Fill="{Binding Fill, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+        <Ellipse x:Name="D3" Width="6" Height="6" Opacity="0.25" Fill="{Binding Fill, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+    </StackPanel>
+</UserControl>

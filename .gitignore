@@ -1,0 +1,10 @@
+# build output
+bin/
+obj/
+.vs/
+*.user
+
+# not part of the repository
+installer/
+CLAUDE.md
+.claude/

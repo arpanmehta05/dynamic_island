@@ -1,0 +1,6 @@
+<UserControl x:Class="DynamicIsland.Views.SpritePetControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             SnapsToDevicePixels="True">
+    <Image x:Name="Frame" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
+</UserControl>
