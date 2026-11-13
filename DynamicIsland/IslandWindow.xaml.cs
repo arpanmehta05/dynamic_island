@@ -33,7 +33,8 @@ public partial class IslandWindow : Window
     double _restHeight = CollapsedHeight;
     Backdrop? _backdrop;
     FullscreenWatcher? _fullscreen;
-    bool _hidden;
+    bool _hidden, _snipping;
+    SnipWatcher? _snip;
 
     public IslandWindow()
     {
@@ -85,6 +86,8 @@ public partial class IslandWindow : Window
         {
             _fullscreen = new FullscreenWatcher(new WindowInteropHelper(this).Handle);
             _fullscreen.Changed += _ => ApplyAutoHide();
+            _snip = new SnipWatcher(); // Print Screen / Win+Shift+S: step aside from the capture toolbar, whatever the Auto-hide setting
+            _snip.Changed += open => { _snipping = open; ApplyAutoHide(); };
             _fullscreen.Activity += () => _backdrop!.Poke();
             _fullscreen.Settled += () => WindowStyler.KeepOnTop(this);
             SettingsStore.Current.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(SettingsStore.HideInFullscreen)) ApplyAutoHide(); };
@@ -155,10 +158,10 @@ public partial class IslandWindow : Window
         ((Storyboard)Resources["Close"]).Begin(this);
     }
 
-    /// <summary>The island only steps away for a fullscreen app when that is switched on in Settings.</summary>
+    /// <summary>The island steps away for a screen capture, and for a fullscreen app only when that is switched on in Settings.</summary>
     void ApplyAutoHide()
     {
-        var hide = _fullscreen!.IsFullscreen && SettingsStore.Current.HideInFullscreen;
+        var hide = _snipping || (_fullscreen!.IsFullscreen && SettingsStore.Current.HideInFullscreen);
         if (hide != _hidden) SetHidden(hide);
     }
 
