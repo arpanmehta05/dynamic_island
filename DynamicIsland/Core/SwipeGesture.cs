@@ -9,7 +9,9 @@ namespace DynamicIsland.Core;
 /// </summary>
 sealed class SwipeGesture
 {
-    const int WM_MOUSEHWHEEL = 0x020E, Needed = 90;
+    // Windows delivers a touchpad's sideways scroll as WM_POINTERHWHEEL to windows that take pointer input and turns it into WM_MOUSEHWHEEL
+    // only if nobody handled it: listen for both so it works wherever the pointer is.
+    const int WM_MOUSEHWHEEL = 0x020E, WM_POINTERHWHEEL = 0x024F, Needed = 70;
     static readonly TimeSpan Quiet = TimeSpan.FromMilliseconds(250);
 
     DateTime _last;
@@ -22,7 +24,7 @@ sealed class SwipeGesture
 
     IntPtr Hook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
-        if (msg != WM_MOUSEHWHEEL) return IntPtr.Zero;
+        if (msg != WM_MOUSEHWHEEL && msg != WM_POINTERHWHEEL) return IntPtr.Zero;
         handled = true;
 
         var now = DateTime.UtcNow;

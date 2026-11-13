@@ -40,7 +40,7 @@ public partial class IslandWindow : Window
         InitializeComponent();
         _agents = new AgentsHub(_media);
         DataContext = new { Clock = new ClockModule(), Media = _media, Agents = _agents, Hud = _hud };
-        _agents.TabChanged += () => { ((Storyboard)Resources["TabSwitch"]).Begin(this); Motion.BlurIn(MainBody, 10, 0.3); };
+        _agents.TabChanged += direction => Motion.SlideIn(MainBody, direction);
         _shrink.Tick += (_, _) => { _shrink.Stop(); Height = _restHeight; };
         _reset.Tick += (_, _) => { _reset.Stop(); _agents.ResetTab(); };
         Detail.SizeChanged += (_, _) => Fit(); // another view, or a longer question: the open island follows its content

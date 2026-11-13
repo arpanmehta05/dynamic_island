@@ -64,7 +64,7 @@ class AgentsHub : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
     /// <summary>Raised when the user picks a different button (the window plays a small switch animation).</summary>
-    public event Action? TabChanged;
+    public event Action<int>? TabChanged;
 
     public AgentsHub(MediaModule media)
     {
@@ -104,12 +104,13 @@ class AgentsHub : INotifyPropertyChanged
     {
         if (i == _index) return;
         Current.IsSelected = false;
+        var previous = _index;
         _index = i;
         Current.IsSelected = true;
         if (Current == Screenshots) Screenshots.MarkSeen();
         Raise(nameof(ShowPlayer), nameof(ShowAgent), nameof(ShowScreenshots), nameof(ShowClipboard), nameof(ShowPorts), nameof(ShowPower), nameof(ShowSettings), nameof(ShowApproval), nameof(SelectedAgent), nameof(PetActive));
         if (_expanded) RefreshAll();
-        TabChanged?.Invoke();
+        TabChanged?.Invoke(Math.Sign(i - previous));
     }
 
     /// <summary>A swipe: moves to the next (+1) or previous (-1) footer button. Not while Claude is waiting for an answer.</summary>

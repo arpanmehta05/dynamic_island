@@ -290,12 +290,6 @@
             </Setter>
             <Style.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter Property="Foreground" Value="White"/></Trigger></Style.Triggers>
         </Style>
-        <!-- Played when the view changes: the new content grows into place while a blur clears (the blur is added by Motion.BlurIn) -->
-        <Storyboard x:Key="TabSwitch">
-            <DoubleAnimation Storyboard.TargetName="MainBody" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.26"/>
-            <DoubleAnimation Storyboard.TargetName="MainScale" Storyboard.TargetProperty="ScaleX" From="0.94" To="1" Duration="0:0:0.5" EasingFunction="{StaticResource Spring}"/>
-            <DoubleAnimation Storyboard.TargetName="MainScale" Storyboard.TargetProperty="ScaleY" From="0.94" To="1" Duration="0:0:0.5" EasingFunction="{StaticResource Spring}"/>
-        </Storyboard>
 
         <!-- A new question or permission takes the place of the last one: it slides in from the right -->
         <Storyboard x:Key="NextQuestion">
@@ -583,8 +577,8 @@
               <Grid.RenderTransform><ScaleTransform x:Name="DetailScale" ScaleX="0.72" ScaleY="0.5"/></Grid.RenderTransform>
               <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="40"/></Grid.RowDefinitions>
               <!-- Every view is 130 tall except Claude's questions, which take the room they need: the island grows with them -->
-              <Grid x:Name="MainBody" MinHeight="130" MaxHeight="380" RenderTransformOrigin="0.5,0.5">
-                <Grid.RenderTransform><ScaleTransform x:Name="MainScale"/></Grid.RenderTransform>
+              <Grid x:Name="MainBody" MinHeight="130" MaxHeight="380">
+                <Grid.RenderTransform><TranslateTransform/></Grid.RenderTransform>
                 <!-- Player view: the media player, or the clock when nothing plays -->
                 <Grid Height="130" Visibility="{Binding Agents.ShowPlayer, Converter={StaticResource BoolToVis}}">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,6,0,0" IsHitTestVisible="False">
