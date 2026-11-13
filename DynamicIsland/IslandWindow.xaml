@@ -386,6 +386,7 @@
             <DoubleAnimation Storyboard.TargetName="Shape" Storyboard.TargetProperty="RadiusX" From="15" To="16" Duration="0:0:1.15"/>
             <DoubleAnimation Storyboard.TargetName="Shape" Storyboard.TargetProperty="RadiusY" From="15" To="16" Duration="0:0:1.15"/>
             <DoubleAnimationUsingKeyFrames Storyboard.TargetName="Compact" Storyboard.TargetProperty="Opacity">
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="0"/>
                 <LinearDoubleKeyFrame KeyTime="0:0:0.75" Value="0"/>
                 <LinearDoubleKeyFrame KeyTime="0:0:1.05" Value="1"/>
             </DoubleAnimationUsingKeyFrames>
