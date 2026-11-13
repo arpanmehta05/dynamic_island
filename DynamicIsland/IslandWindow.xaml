@@ -303,7 +303,7 @@
             <DoubleAnimation Storyboard.TargetProperty="RenderTransform.X" From="28" To="0" Duration="0:0:0.55" EasingFunction="{StaticResource Spring}"/>
         </Storyboard>
 
-        <!-- Flat round transport button: soft circle fades in on hover, squeezes on press -->
+        <!-- Flat round transport button: the soft circle shows only while it is pressed, then fades away -->
         <Style x:Key="Ctl" TargetType="Button">
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets"/>
@@ -321,14 +321,6 @@
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Grid>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Trigger.EnterActions><BeginStoryboard><Storyboard>
-                                    <DoubleAnimation Storyboard.TargetName="Halo" Storyboard.TargetProperty="Opacity" To="0.09" Duration="0:0:0.12"/>
-                                </Storyboard></BeginStoryboard></Trigger.EnterActions>
-                                <Trigger.ExitActions><BeginStoryboard><Storyboard>
-                                    <DoubleAnimation Storyboard.TargetName="Halo" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"/>
-                                </Storyboard></BeginStoryboard></Trigger.ExitActions>
-                            </Trigger>
                             <Trigger Property="IsPressed" Value="True">
                                 <Trigger.EnterActions><BeginStoryboard><Storyboard>
                                     <DoubleAnimation Storyboard.TargetName="Squeeze" Storyboard.TargetProperty="ScaleX" To="0.84" Duration="0:0:0.08"/>
@@ -338,7 +330,7 @@
                                 <Trigger.ExitActions><BeginStoryboard><Storyboard>
                                     <DoubleAnimation Storyboard.TargetName="Squeeze" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.35"><DoubleAnimation.EasingFunction><BackEase Amplitude="0.6" EasingMode="EaseOut"/></DoubleAnimation.EasingFunction></DoubleAnimation>
                                     <DoubleAnimation Storyboard.TargetName="Squeeze" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.35"><DoubleAnimation.EasingFunction><BackEase Amplitude="0.6" EasingMode="EaseOut"/></DoubleAnimation.EasingFunction></DoubleAnimation>
-                                    <DoubleAnimation Storyboard.TargetName="Halo" Storyboard.TargetProperty="Opacity" To="0.09" Duration="0:0:0.2"/>
+                                    <DoubleAnimation Storyboard.TargetName="Halo" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.28"/>
                                 </Storyboard></BeginStoryboard></Trigger.ExitActions>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -1120,9 +1112,9 @@
                         </Rectangle>
                     </Grid>
                 </Grid>
-                <ItemsControl ItemsSource="{Binding Agents.Items}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,3,0,0">
-                    <ItemsControl.Style>
-                        <Style TargetType="ItemsControl">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,3,0,0">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding Hud.Showing}" Value="True">
                                     <Setter Property="IsHitTestVisible" Value="False"/>
@@ -1135,7 +1127,8 @@
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
-                    </ItemsControl.Style>
+                    </StackPanel.Style>
+                <ItemsControl ItemsSource="{Binding Agents.Items}">
                     <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
@@ -1179,6 +1172,11 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+                <!-- Volume on demand: the bar also shows when the volume keys are pressed, but this is always there -->
+                <Button Style="{StaticResource FootBtn}" ToolTip="Volume" Command="{Binding Hud.Reveal}">
+                    <TextBlock Text="&#xE767;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Foreground="White" FontSize="15" Width="26" TextAlignment="Center"/>
+                </Button>
+                </StackPanel>
               </Grid>
             </Grid>
             </Canvas>

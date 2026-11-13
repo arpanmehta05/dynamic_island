@@ -8,7 +8,7 @@ namespace DynamicIsland.Core;
 /// </summary>
 sealed class VolumeWatcher : IDisposable
 {
-    const int eRender = 0, eMultimedia = 1, CLSCTX_ALL = 23;
+    const int eRender = 0, eConsole = 0, CLSCTX_ALL = 23;
 
     [ComImport, Guid("BCDE0395-E52F-467C-8E3D-C4579291692E")] class MMDeviceEnumeratorClass { }
 
@@ -71,10 +71,11 @@ sealed class VolumeWatcher : IDisposable
             owner.Changed?.Invoke(BitConverter.Int32BitsToSingle(Marshal.ReadInt32(data, 20)), Marshal.ReadInt32(data, 16) != 0);
             return 0;
         }
-        public int OnDefaultDeviceChanged(int flow, int role, string id) { if (flow == eRender && role == eMultimedia) owner.Bind(); return 0; }
-        public int OnDeviceStateChanged(string id, int state) => 0;
-        public int OnDeviceAdded(string id) => 0;
-        public int OnDeviceRemoved(string id) => 0;
+        // These run inside the audio service's own notification: nothing here may call back into it, so just ask for a re-bind later
+        public int OnDefaultDeviceChanged(int flow, int role, string id) { if (flow == eRender) owner.Rebind(); return 0; }
+        public int OnDeviceStateChanged(string id, int state) { owner.Rebind(); return 0; }
+        public int OnDeviceAdded(string id) { owner.Rebind(); return 0; }
+        public int OnDeviceRemoved(string id) { owner.Rebind(); return 0; }
         public int OnPropertyValueChanged(string id, IntPtr key) => 0;
     }
 
@@ -82,6 +83,23 @@ sealed class VolumeWatcher : IDisposable
     readonly IMMDeviceEnumerator _enumerator = (IMMDeviceEnumerator)new MMDeviceEnumeratorClass();
     readonly object _lock = new();
     IAudioEndpointVolume? _endpoint;
+    int _rebindQueued, _retries;
+
+    /// <summary>The speaker's current volume (0..1) and mute state, or null when there is no speaker.</summary>
+    public (float Level, bool Muted)? Read()
+    {
+        lock (_lock)
+        {
+            if (_endpoint is null) return null;
+            try
+            {
+                _endpoint.GetMasterVolumeLevelScalar(out var level);
+                _endpoint.GetMute(out var muted);
+                return (level, muted);
+            }
+            catch { return null; }
+        }
+    }
 
     /// <summary>Sets the speaker volume (0..1) and unmutes. The change comes back through <see cref="Changed"/> like any other.</summary>
     public void Set(float level)
@@ -103,6 +121,23 @@ sealed class VolumeWatcher : IDisposable
         _callbacks = new Callbacks(this);
         _enumerator.RegisterEndpointNotificationCallback(_callbacks);
         Bind();
+        // the audio stack restarts after sleep: the old endpoint stops reporting
+        Microsoft.Win32.SystemEvents.PowerModeChanged += (_, e) => { if (e.Mode == Microsoft.Win32.PowerModes.Resume) Rebind(); };
+    }
+
+    /// <summary>
+    /// Follows the default speaker again after headphones connect or disconnect, the default changes, or the PC wakes. Waits a moment
+    /// (Bluetooth devices announce themselves before they are usable) and folds a burst of notifications into one.
+    /// </summary>
+    void Rebind()
+    {
+        if (Interlocked.Exchange(ref _rebindQueued, 1) == 1) return;
+        Task.Run(async () =>
+        {
+            await Task.Delay(600);
+            Interlocked.Exchange(ref _rebindQueued, 0);
+            Bind();
+        });
     }
 
     void Bind()
@@ -112,15 +147,21 @@ sealed class VolumeWatcher : IDisposable
             Release();
             try
             {
-                if (_enumerator.GetDefaultAudioEndpoint(eRender, eMultimedia, out var device) != 0) return;
-                var iid = typeof(IAudioEndpointVolume).GUID;
-                var activated = device.Activate(ref iid, CLSCTX_ALL, IntPtr.Zero, out var endpoint);
-                Marshal.ReleaseComObject(device);
-                if (activated != 0) return;
-                _endpoint = (IAudioEndpointVolume)endpoint;
-                _endpoint.RegisterControlChangeNotify(_callbacks);
+                if (_enumerator.GetDefaultAudioEndpoint(eRender, eConsole, out var device) == 0)
+                {
+                    var iid = typeof(IAudioEndpointVolume).GUID;
+                    var activated = device.Activate(ref iid, CLSCTX_ALL, IntPtr.Zero, out var endpoint);
+                    Marshal.ReleaseComObject(device);
+                    if (activated == 0)
+                    {
+                        _endpoint = (IAudioEndpointVolume)endpoint;
+                        _endpoint.RegisterControlChangeNotify(_callbacks);
+                    }
+                }
             }
-            catch { /* no speakers right now: the next default-device change tries again */ }
+            catch { /* the device isn't ready yet: retried below */ }
+            if (_endpoint is not null) _retries = 0;
+            else if (_retries++ < 5) Rebind();
         }
     }
 

@@ -42,6 +42,15 @@ class MediaModule : INotifyPropertyChanged
     double _progress, _coverWidth = CoverHeight;
 
     public bool HasMedia { get => _hasMedia; private set => Set(ref _hasMedia, value); }
+
+    // Skipping to the next track makes players briefly report "nothing" before the new track appears: wait a moment before the player goes away
+    readonly DispatcherTimer _lost = new() { Interval = TimeSpan.FromSeconds(2.5) };
+    void SetHasMedia(bool has)
+    {
+        _lost.Stop();
+        if (has || !_hasMedia) { HasMedia = has; return; }
+        _lost.Start();
+    }
     public string Title { get => _title; private set => Set(ref _title, value); }
     public string Artist { get => _artist; private set => Set(ref _artist, value); }
     public ImageSource? Art { get => _art; private set => Set(ref _art, value); }
@@ -79,6 +88,7 @@ class MediaModule : INotifyPropertyChanged
         Forward10 = new RelayCommand(() => SeekBy(10));
         OpenSource = new RelayCommand(() => SourceApp.Activate(_sourceId, Title));
         _tick.Tick += (_, _) => UpdateProgress();
+        _lost.Tick += (_, _) => { _lost.Stop(); HasMedia = false; };
         _legacyTimer.Tick += (_, _) => LegacyTick();
         _legacyTimer.Start();
         _ = InitAsync();
@@ -130,7 +140,7 @@ class MediaModule : INotifyPropertyChanged
             _session.TimelinePropertiesChanged -= OnPlayback;
         }
         _session = _manager?.GetCurrentSession();
-        if (_session is null) { _legacy = null; HasMedia = false; IsPlaying = false; HasTimeline = false; LegacyTick(); return; }
+        if (_session is null) { _legacy = null; SetHasMedia(false); IsPlaying = false; HasTimeline = false; LegacyTick(); return; }
         _legacy = null;
 
         _session.MediaPropertiesChanged += OnMedia;
@@ -147,6 +157,7 @@ class MediaModule : INotifyPropertyChanged
         var id = s.SourceAppUserModelId;
         await _ui.InvokeAsync(() =>
         {
+            if (props.Title.Length == 0 && props.Artist.Length == 0 && _hasMedia) { SetHasMedia(false); return; } // between tracks: keep showing the last one
             _sourceId = id;
             Title = props.Title; Artist = props.Artist;
 
@@ -157,7 +168,7 @@ class MediaModule : INotifyPropertyChanged
             // Wide thumbnails (YouTube) get a wider cover so they aren't cropped to a square
             CoverWidth = art is { Height: > 0 } ? Math.Clamp(CoverHeight * art.Width / art.Height, CoverHeight, MaxCoverWidth) : CoverHeight;
 
-            HasMedia = Title.Length > 0 || Artist.Length > 0;
+            SetHasMedia(Title.Length > 0 || Artist.Length > 0);
         });
     }
 
@@ -238,7 +249,7 @@ class MediaModule : INotifyPropertyChanged
         var found = LegacyPlayers.Find();
         if (found is not { } f)
         {
-            if (_legacy is not null) { _legacy = null; _vlcAlive = false; HasMedia = false; IsPlaying = false; HasTimeline = false; IsLong = false; }
+            if (_legacy is not null) { _legacy = null; _vlcAlive = false; SetHasMedia(false); IsPlaying = false; HasTimeline = false; IsLong = false; }
             return;
         }
 
@@ -262,7 +273,7 @@ class MediaModule : INotifyPropertyChanged
             HasTimeline = false; IsLong = false; Progress = 0; Elapsed = ""; Total = "";
             IsPlaying = f.Playing;
         }
-        HasMedia = true;
+        SetHasMedia(true);
         if (f.Process == "vlc" && _vlc is not null) _ = PollVlcAsync(_vlc);
     }
     void UpdateTick() => _tick.IsEnabled = _tracking && IsPlaying;

@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Threading;
 using DynamicIsland.Core;
 
@@ -13,10 +14,12 @@ sealed class HudModule : INotifyPropertyChanged
 {
     public const double BarLength = 70;
 
-    readonly DispatcherTimer _hide = new() { Interval = TimeSpan.FromMilliseconds(1600) };
+    readonly DispatcherTimer _hide = new() { Interval = Flash };
     readonly VolumeWatcher? _volume;
     readonly BrightnessWatcher _brightness;
     readonly PrivacyWatcher _privacy;
+    static readonly TimeSpan HoldFor = TimeSpan.FromSeconds(3.5), Flash = TimeSpan.FromMilliseconds(1600);
+    ICommand? _reveal;
     bool _showing, _mic, _camera, _isVolume;
     string _glyph = "";
     double _level;
@@ -55,6 +58,23 @@ sealed class HudModule : INotifyPropertyChanged
 
     public void SetVolume(double level) => _volume?.Set((float)level);
 
+    /// <summary>The speaker button in the footer: show the volume bar now, for long enough to grab it.</summary>
+    public ICommand Reveal => _reveal ??= new RelayCommand(() =>
+    {
+        if (_volume?.Read() is not { } v) return;
+        Show(v.Muted ? "\uE74F" : "\uE767", v.Muted ? 0 : v.Level, true);
+        _hide.Interval = HoldFor;
+    });
+
+    /// <summary>The pointer is on the bar: keep it up.</summary>
+    public void Keep()
+    {
+        if (!_showing) return;
+        _hide.Stop();
+        _hide.Interval = HoldFor;
+        _hide.Start();
+    }
+
     void Show(string glyph, double level, bool volume)
     {
         Glyph = glyph;
@@ -64,6 +84,7 @@ sealed class HudModule : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new(nameof(Level)));
         Showing = true;
         _hide.Stop();
+        _hide.Interval = Flash;
         _hide.Start();
     }
 

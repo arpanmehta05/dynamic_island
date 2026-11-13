@@ -167,6 +167,7 @@ public partial class IslandWindow : Window
     void Volume_Set(object sender, MouseEventArgs e)
     {
         var bar = (FrameworkElement)sender;
+        _hud.Keep();
         if (e.LeftButton != MouseButtonState.Pressed || !_hud.IsVolume) return;
         bar.CaptureMouse();
         _hud.SetVolume(e.GetPosition(bar).X / bar.ActualWidth);
