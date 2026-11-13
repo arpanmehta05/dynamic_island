@@ -4,7 +4,7 @@
         xmlns:core="clr-namespace:DynamicIsland.Core"
         xmlns:views="clr-namespace:DynamicIsland.Views"
         xmlns:ap="clr-namespace:DynamicIsland.Modules.Approvals"
-        Title="Dynamic Island" Width="400" Height="70"
+        Title="Dynamic Island" Width="440" Height="70"
         AllowsTransparency="True" WindowStyle="None" Background="Transparent"
         Topmost="True" ShowInTaskbar="False" ResizeMode="NoResize"
         TextOptions.TextFormattingMode="Ideal">
@@ -14,6 +14,10 @@
         <FontFamily x:Key="InterSemiBold">/Fonts/#Inter SemiBold</FontFamily>
         <core:RectToBoundsConverter x:Key="RectBounds"/>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <core:SpringEase x:Key="Spring" Damping="0.72" Frequency="13"/>
+        <core:SpringEase x:Key="SoftSpring" Damping="0.86" Frequency="12"/>
+        <core:SpringEase x:Key="Bouncy" Damping="0.5" Frequency="14"/>
+        <CubicEase x:Key="Smooth" EasingMode="EaseOut"/>
 
         <!-- Footer button: a soft pill that lights up when selected, squeezes on press -->
         <Style x:Key="FootBtn" TargetType="Button">
@@ -27,7 +31,7 @@
                     <ControlTemplate TargetType="Button">
                         <Grid Background="Transparent" RenderTransformOrigin="0.5,0.5">
                             <Grid.RenderTransform><ScaleTransform x:Name="Squeeze"/></Grid.RenderTransform>
-                            <Border x:Name="Pill" CornerRadius="14" Background="White" Opacity="0"/>
+                            <Border x:Name="Pill" CornerRadius="14" Background="White" BorderBrush="#66FFFFFF" BorderThickness="1" Opacity="0"/>
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Grid>
                         <ControlTemplate.Triggers>
@@ -62,18 +66,36 @@
         <Style x:Key="ClipRow" TargetType="Button">
             <Setter Property="Focusable" Value="False"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Height" Value="27"/>
-            <Setter Property="Margin" Value="0,0,0,3"/>
+            <Setter Property="Height" Value="29"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Grid>
-                            <Border x:Name="Bg" CornerRadius="9" Background="White" Opacity="0.07"/>
-                            <ContentPresenter Margin="10,0" VerticalAlignment="Center"/>
+                        <Grid RenderTransformOrigin="0.5,0.5">
+                            <Grid.RenderTransform><ScaleTransform x:Name="Squeeze"/></Grid.RenderTransform>
+                            <Border CornerRadius="11" Background="#10FFFFFF" BorderBrush="#14FFFFFF" BorderThickness="1"/>
+                            <Border x:Name="Bg" CornerRadius="11" Background="White" Opacity="0"/>
+                            <ContentPresenter Margin="11,0" VerticalAlignment="Center"/>
                         </Grid>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bg" Property="Opacity" Value="0.15"/></Trigger>
-                            <Trigger Property="IsPressed" Value="True"><Setter TargetName="Bg" Property="Opacity" Value="0.25"/></Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Trigger.EnterActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Opacity" To="0.09" Duration="0:0:0.12"/>
+                                </Storyboard></BeginStoryboard></Trigger.EnterActions>
+                                <Trigger.ExitActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.25"/>
+                                </Storyboard></BeginStoryboard></Trigger.ExitActions>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Trigger.EnterActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Squeeze" Storyboard.TargetProperty="ScaleX" To="0.975" Duration="0:0:0.08"/>
+                                    <DoubleAnimation Storyboard.TargetName="Squeeze" Storyboard.TargetProperty="ScaleY" To="0.95" Duration="0:0:0.08"/>
+                                </Storyboard></BeginStoryboard></Trigger.EnterActions>
+                                <Trigger.ExitActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Squeeze" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.45" EasingFunction="{StaticResource Spring}"/>
+                                    <DoubleAnimation Storyboard.TargetName="Squeeze" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.45" EasingFunction="{StaticResource Spring}"/>
+                                </Storyboard></BeginStoryboard></Trigger.ExitActions>
+                            </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -110,45 +132,47 @@
             </Setter>
         </Style>
 
-        <!-- Answer button (Allow / Deny / Send): coloured glass pill with a top sheen; brightens on hover, squeezes on press -->
+        <!-- Answer button (Allow / Deny / Send): a glass pill; Tag="primary" makes it the solid white one. Brightens on hover, squeezes on press. -->
         <Style x:Key="ActionBtn" TargetType="Button">
             <Setter Property="Focusable" Value="False"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Foreground" Value="#D9FFFFFF"/>
-            <Setter Property="Height" Value="32"/>
+            <Setter Property="Foreground" Value="#E6FFFFFF"/>
+            <Setter Property="FontFamily" Value="{StaticResource InterSemiBold}"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="Height" Value="36"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Grid RenderTransformOrigin="0.5,0.5" Background="Transparent">
                             <Grid.RenderTransform><ScaleTransform x:Name="Squeeze"/></Grid.RenderTransform>
-                            <Border x:Name="Body" CornerRadius="16" Background="#14FFFFFF" BorderBrush="#26FFFFFF" BorderThickness="1"/>
-                            <Border CornerRadius="16" IsHitTestVisible="False">
-                                <Border.Background>
-                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                        <GradientStop Color="#14FFFFFF" Offset="0"/><GradientStop Color="#00FFFFFF" Offset="0.5"/>
-                                    </LinearGradientBrush>
-                                </Border.Background>
-                            </Border>
-                            <Border x:Name="Hover" CornerRadius="16" Background="White" Opacity="0" IsHitTestVisible="False"/>
+                            <Border x:Name="Body" CornerRadius="18" Background="#1CFFFFFF" BorderBrush="#24FFFFFF" BorderThickness="1"/>
+                            <Border x:Name="Hover" CornerRadius="18" Background="White" Opacity="0" IsHitTestVisible="False"/>
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}"/>
                         </Grid>
                         <ControlTemplate.Triggers>
-                            <!-- Tag="primary": the main answer is the brighter pane; everything else is quiet -->
                             <Trigger Property="Tag" Value="primary">
-                                <Setter TargetName="Body" Property="Background" Value="#2DFFFFFF"/>
-                                <Setter TargetName="Body" Property="BorderBrush" Value="#59FFFFFF"/>
-                                <Setter Property="Foreground" Value="White"/>
+                                <Setter TargetName="Body" Property="Background" Value="#F2FFFFFF"/>
+                                <Setter TargetName="Body" Property="BorderBrush" Value="White"/>
+                                <Setter TargetName="Hover" Property="Background" Value="Black"/>
+                                <Setter Property="Foreground" Value="#141418"/>
                             </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Hover" Property="Opacity" Value="0.1"/></Trigger>
-                            <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.4"/></Trigger>
-                            <Trigger Property="IsPressed" Value="True">
+                            <Trigger Property="IsMouseOver" Value="True">
                                 <Trigger.EnterActions><BeginStoryboard><Storyboard>
-                                    <DoubleAnimation Storyboard.TargetName="Squeeze" Storyboard.TargetProperty="ScaleX" To="0.95" Duration="0:0:0.07"/>
-                                    <DoubleAnimation Storyboard.TargetName="Squeeze" Storyboard.TargetProperty="ScaleY" To="0.93" Duration="0:0:0.07"/>
+                                    <DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="0.1" Duration="0:0:0.12"/>
                                 </Storyboard></BeginStoryboard></Trigger.EnterActions>
                                 <Trigger.ExitActions><BeginStoryboard><Storyboard>
-                                    <DoubleAnimation Storyboard.TargetName="Squeeze" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.3"><DoubleAnimation.EasingFunction><BackEase Amplitude="0.6" EasingMode="EaseOut"/></DoubleAnimation.EasingFunction></DoubleAnimation>
-                                    <DoubleAnimation Storyboard.TargetName="Squeeze" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.3"><DoubleAnimation.EasingFunction><BackEase Amplitude="0.6" EasingMode="EaseOut"/></DoubleAnimation.EasingFunction></DoubleAnimation>
+                                    <DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.25"/>
+                                </Storyboard></BeginStoryboard></Trigger.ExitActions>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.32"/></Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Trigger.EnterActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Squeeze" Storyboard.TargetProperty="ScaleX" To="0.95" Duration="0:0:0.08"/>
+                                    <DoubleAnimation Storyboard.TargetName="Squeeze" Storyboard.TargetProperty="ScaleY" To="0.93" Duration="0:0:0.08"/>
+                                </Storyboard></BeginStoryboard></Trigger.EnterActions>
+                                <Trigger.ExitActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Squeeze" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.45" EasingFunction="{StaticResource Spring}"/>
+                                    <DoubleAnimation Storyboard.TargetName="Squeeze" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.45" EasingFunction="{StaticResource Spring}"/>
                                 </Storyboard></BeginStoryboard></Trigger.ExitActions>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -157,30 +181,65 @@
             </Setter>
         </Style>
 
-        <!-- Answer option: a soft chip that fills white when chosen (Tag carries IsSelected) -->
-        <Style x:Key="ChoiceChip" TargetType="Button">
+        <!-- One answer to a question: a full-width glass row with a round marker that fills when chosen (Tag carries IsSelected) -->
+        <Style x:Key="OptionRow" TargetType="Button">
             <Setter Property="Focusable" Value="False"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Foreground" Value="#CCFFFFFF"/>
-            <Setter Property="FontFamily" Value="{StaticResource Inter}"/>
-            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="Margin" Value="0,0,0,5"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bg" CornerRadius="13" Height="26" Padding="12,0" Background="#12FFFFFF" BorderBrush="#22FFFFFF" BorderThickness="1">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock x:Name="Check" Text="&#xE73E;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10" Margin="0,1,6,0" VerticalAlignment="Center" Visibility="Collapsed" Foreground="White"/>
-                                <ContentPresenter VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}"/>
-                            </StackPanel>
-                        </Border>
+                        <Grid RenderTransformOrigin="0.5,0.5">
+                            <Grid.RenderTransform><ScaleTransform x:Name="Squeeze"/></Grid.RenderTransform>
+                            <Border CornerRadius="13" Background="#10FFFFFF" BorderBrush="#14FFFFFF" BorderThickness="1"/>
+                            <Border x:Name="Hover" CornerRadius="13" Background="White" Opacity="0"/>
+                            <Border x:Name="Chosen" CornerRadius="13" Background="#1FFFFFFF" BorderBrush="#80FFFFFF" BorderThickness="1" Opacity="0"/>
+                            <Grid Margin="11,8,12,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <Grid Width="18" Height="18" VerticalAlignment="Center">
+                                    <Ellipse Stroke="#66FFFFFF" StrokeThickness="1.5"/>
+                                    <Grid x:Name="Mark" Opacity="0" RenderTransformOrigin="0.5,0.5">
+                                        <Grid.RenderTransform><ScaleTransform x:Name="MarkScale" ScaleX="0.3" ScaleY="0.3"/></Grid.RenderTransform>
+                                        <Ellipse Fill="White"/>
+                                        <TextBlock Text="&#xE73E;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10" FontWeight="Bold" Foreground="#141418" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Grid>
+                                <ContentPresenter Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Grid>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bg" Property="Background" Value="#22FFFFFF"/></Trigger>
-                            <!-- chosen: a brighter pane with a clear edge and a tick, still glass -->
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Trigger.EnterActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="0.07" Duration="0:0:0.12"/>
+                                </Storyboard></BeginStoryboard></Trigger.EnterActions>
+                                <Trigger.ExitActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.25"/>
+                                </Storyboard></BeginStoryboard></Trigger.ExitActions>
+                            </Trigger>
                             <Trigger Property="Tag" Value="selected">
-                                <Setter TargetName="Bg" Property="Background" Value="#30FFFFFF"/>
-                                <Setter TargetName="Bg" Property="BorderBrush" Value="#8CFFFFFF"/>
-                                <Setter TargetName="Check" Property="Visibility" Value="Visible"/>
-                                <Setter Property="Foreground" Value="White"/>
+                                <Trigger.EnterActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Chosen" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.18"/>
+                                    <DoubleAnimation Storyboard.TargetName="Mark" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.1"/>
+                                    <DoubleAnimation Storyboard.TargetName="MarkScale" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.45" EasingFunction="{StaticResource Bouncy}"/>
+                                    <DoubleAnimation Storyboard.TargetName="MarkScale" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.45" EasingFunction="{StaticResource Bouncy}"/>
+                                </Storyboard></BeginStoryboard></Trigger.EnterActions>
+                                <Trigger.ExitActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Chosen" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.18"/>
+                                    <DoubleAnimation Storyboard.TargetName="Mark" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.14"/>
+                                    <DoubleAnimation Storyboard.TargetName="MarkScale" Storyboard.TargetProperty="ScaleX" To="0.3" Duration="0:0:0.14"/>
+                                    <DoubleAnimation Storyboard.TargetName="MarkScale" Storyboard.TargetProperty="ScaleY" To="0.3" Duration="0:0:0.14"/>
+                                </Storyboard></BeginStoryboard></Trigger.ExitActions>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Trigger.EnterActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Squeeze" Storyboard.TargetProperty="ScaleX" To="0.975" Duration="0:0:0.08"/>
+                                    <DoubleAnimation Storyboard.TargetName="Squeeze" Storyboard.TargetProperty="ScaleY" To="0.96" Duration="0:0:0.08"/>
+                                </Storyboard></BeginStoryboard></Trigger.EnterActions>
+                                <Trigger.ExitActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Squeeze" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.45" EasingFunction="{StaticResource Spring}"/>
+                                    <DoubleAnimation Storyboard.TargetName="Squeeze" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.45" EasingFunction="{StaticResource Spring}"/>
+                                </Storyboard></BeginStoryboard></Trigger.ExitActions>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -188,7 +247,38 @@
             </Setter>
         </Style>
 
-        <!-- Small text button ("Clear") -->
+        <!-- One choice in a segmented control (Settings > Glass): the chosen one is the bright pill (Tag="selected") -->
+        <Style x:Key="Segment" TargetType="Button">
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="#A6FFFFFF"/>
+            <Setter Property="FontFamily" Value="{StaticResource InterSemiBold}"/>
+            <Setter Property="FontSize" Value="10.5"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid Height="22" Background="Transparent">
+                            <Border x:Name="Pill" CornerRadius="11" Background="#38FFFFFF" Opacity="0"/>
+                            <ContentPresenter Margin="8,0" HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter Property="Foreground" Value="White"/></Trigger>
+                            <Trigger Property="Tag" Value="selected">
+                                <Setter Property="Foreground" Value="White"/>
+                                <Trigger.EnterActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Pill" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.2"/>
+                                </Storyboard></BeginStoryboard></Trigger.EnterActions>
+                                <Trigger.ExitActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Pill" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"/>
+                                </Storyboard></BeginStoryboard></Trigger.ExitActions>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+
         <Style x:Key="LinkBtn" TargetType="Button">
             <Setter Property="Focusable" Value="False"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -200,12 +290,17 @@
             </Setter>
             <Style.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter Property="Foreground" Value="White"/></Trigger></Style.Triggers>
         </Style>
-        <!-- Played when the tab changes: the new content fades in and slides a little -->
+        <!-- Played when the view changes: the new content grows into place while a blur clears (the blur is added by Motion.BlurIn) -->
         <Storyboard x:Key="TabSwitch">
-            <DoubleAnimation Storyboard.TargetName="MainBody" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.28"/>
-            <DoubleAnimation Storyboard.TargetName="MainSlide" Storyboard.TargetProperty="X" From="16" To="0" Duration="0:0:0.34">
-                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="MainBody" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.26"/>
+            <DoubleAnimation Storyboard.TargetName="MainScale" Storyboard.TargetProperty="ScaleX" From="0.94" To="1" Duration="0:0:0.5" EasingFunction="{StaticResource Spring}"/>
+            <DoubleAnimation Storyboard.TargetName="MainScale" Storyboard.TargetProperty="ScaleY" From="0.94" To="1" Duration="0:0:0.5" EasingFunction="{StaticResource Spring}"/>
+        </Storyboard>
+
+        <!-- A new question or permission takes the place of the last one: it slides in from the right -->
+        <Storyboard x:Key="NextQuestion">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.3"/>
+            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.X" From="28" To="0" Duration="0:0:0.55" EasingFunction="{StaticResource Spring}"/>
         </Storyboard>
 
         <!-- Flat round transport button: soft circle fades in on hover, squeezes on press -->
@@ -251,31 +346,35 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <BackEase x:Key="Spring" Amplitude="0.22" EasingMode="EaseOut"/>
-        <CubicEase x:Key="Smooth" EasingMode="EaseOut"/>
 
-        <!-- Open / close the island: started by the mouse entering or leaving, by the hotkey, or by something needing attention -->
+        <!--
+            Open / close: started by the mouse entering or leaving, by the hotkey, or by something needing attention.
+            The glass shape itself is morphed from code (IslandWindow.Morph: its size depends on the view); these move the content with it.
+            The outgoing content fades first, the incoming content springs up to full size behind it.
+        -->
         <Storyboard x:Key="Open">
-            <RectAnimation Storyboard.TargetName="Shape" Storyboard.TargetProperty="Rect" To="0.5,-30,399,200" Duration="0:0:0.6" EasingFunction="{StaticResource Spring}"/>
-            <DoubleAnimation Storyboard.TargetName="Shape" Storyboard.TargetProperty="RadiusX" To="30" Duration="0:0:0.6" EasingFunction="{StaticResource Smooth}"/>
-            <DoubleAnimation Storyboard.TargetName="Shape" Storyboard.TargetProperty="RadiusY" To="30" Duration="0:0:0.6" EasingFunction="{StaticResource Smooth}"/>
-            <DoubleAnimation Storyboard.TargetName="Compact" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.15"/>
-            <DoubleAnimation Storyboard.TargetName="Detail" Storyboard.TargetProperty="Opacity" To="1" BeginTime="0:0:0.2" Duration="0:0:0.35"/>
-            <DoubleAnimation Storyboard.TargetName="Sweep" Storyboard.TargetProperty="X" From="-240" To="600" Duration="0:0:1" EasingFunction="{StaticResource Smooth}"/>
+            <DoubleAnimation Storyboard.TargetName="Compact" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.08"/>
+            <DoubleAnimation Storyboard.TargetName="CompactScale" Storyboard.TargetProperty="ScaleX" To="1.25" Duration="0:0:0.3" EasingFunction="{StaticResource Smooth}"/>
+            <DoubleAnimation Storyboard.TargetName="CompactScale" Storyboard.TargetProperty="ScaleY" To="1.25" Duration="0:0:0.3" EasingFunction="{StaticResource Smooth}"/>
+            <DoubleAnimation Storyboard.TargetName="Detail" Storyboard.TargetProperty="Opacity" To="1" BeginTime="0:0:0.1" Duration="0:0:0.28"/>
+            <DoubleAnimation Storyboard.TargetName="DetailScale" Storyboard.TargetProperty="ScaleX" From="0.72" To="1" Duration="0:0:0.62" EasingFunction="{StaticResource Spring}"/>
+            <DoubleAnimation Storyboard.TargetName="DetailScale" Storyboard.TargetProperty="ScaleY" From="0.5" To="1" Duration="0:0:0.62" EasingFunction="{StaticResource Spring}"/>
+            <DoubleAnimation Storyboard.TargetName="Sweep" Storyboard.TargetProperty="X" From="-240" To="640" Duration="0:0:1.1" EasingFunction="{StaticResource Smooth}"/>
         </Storyboard>
         <Storyboard x:Key="Close">
-            <RectAnimation Storyboard.TargetName="Shape" Storyboard.TargetProperty="Rect" To="110.5,-14,179,48" Duration="0:0:0.5" EasingFunction="{StaticResource Spring}"/>
-            <DoubleAnimation Storyboard.TargetName="Shape" Storyboard.TargetProperty="RadiusX" To="14" Duration="0:0:0.5" EasingFunction="{StaticResource Smooth}"/>
-            <DoubleAnimation Storyboard.TargetName="Shape" Storyboard.TargetProperty="RadiusY" To="14" Duration="0:0:0.5" EasingFunction="{StaticResource Smooth}"/>
-            <DoubleAnimation Storyboard.TargetName="Detail" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.12"/>
-            <DoubleAnimation Storyboard.TargetName="Compact" Storyboard.TargetProperty="Opacity" To="1" BeginTime="0:0:0.25" Duration="0:0:0.25"/>
+            <DoubleAnimation Storyboard.TargetName="Detail" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.14"/>
+            <DoubleAnimation Storyboard.TargetName="DetailScale" Storyboard.TargetProperty="ScaleX" To="0.72" Duration="0:0:0.36" EasingFunction="{StaticResource Smooth}"/>
+            <DoubleAnimation Storyboard.TargetName="DetailScale" Storyboard.TargetProperty="ScaleY" To="0.5" Duration="0:0:0.36" EasingFunction="{StaticResource Smooth}"/>
+            <DoubleAnimation Storyboard.TargetName="Compact" Storyboard.TargetProperty="Opacity" To="1" BeginTime="0:0:0.16" Duration="0:0:0.22"/>
+            <DoubleAnimation Storyboard.TargetName="CompactScale" Storyboard.TargetProperty="ScaleX" From="1.25" To="1" BeginTime="0:0:0.1" Duration="0:0:0.5" EasingFunction="{StaticResource SoftSpring}"/>
+            <DoubleAnimation Storyboard.TargetName="CompactScale" Storyboard.TargetProperty="ScaleY" From="1.25" To="1" BeginTime="0:0:0.1" Duration="0:0:0.5" EasingFunction="{StaticResource SoftSpring}"/>
         </Storyboard>
 
         <!-- Fullscreen app in front: the glass pinches into a droplet, then is pulled up off the screen -->
         <Storyboard x:Key="Hide">
             <RectAnimationUsingKeyFrames Storyboard.TargetName="Shape" Storyboard.TargetProperty="Rect">
-                <SplineRectKeyFrame KeyTime="0:0:0.3" Value="185,-15,30,49" KeySpline="0.45,0 0.55,1"/>
-                <SplineRectKeyFrame KeyTime="0:0:0.7" Value="185,-96,30,62" KeySpline="0.5,0 1,0.8"/>
+                <SplineRectKeyFrame KeyTime="0:0:0.3" Value="205,6,30,30" KeySpline="0.45,0 0.55,1"/>
+                <SplineRectKeyFrame KeyTime="0:0:0.7" Value="205,-80,30,46" KeySpline="0.5,0 1,0.8"/>
             </RectAnimationUsingKeyFrames>
             <DoubleAnimation Storyboard.TargetName="Shape" Storyboard.TargetProperty="RadiusX" To="15" Duration="0:0:0.3"/>
             <DoubleAnimation Storyboard.TargetName="Shape" Storyboard.TargetProperty="RadiusY" To="15" Duration="0:0:0.3"/>
@@ -283,82 +382,87 @@
             <DoubleAnimation Storyboard.TargetName="Detail" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.12"/>
         </Storyboard>
 
-        <!-- Fullscreen over: a droplet falls in from above, lands with a little stretch, then spreads into the notch -->
+        <!-- Fullscreen over: a droplet falls in from above, lands with a little stretch, then spreads into the pill -->
         <Storyboard x:Key="Show">
             <RectAnimationUsingKeyFrames Storyboard.TargetName="Shape" Storyboard.TargetProperty="Rect">
-                <DiscreteRectKeyFrame KeyTime="0:0:0" Value="185,-96,30,62"/>
-                <SplineRectKeyFrame KeyTime="0:0:0.42" Value="185,-15,30,57" KeySpline="0.2,0.7 0.3,1"/>
-                <SplineRectKeyFrame KeyTime="0:0:0.58" Value="185,-15,30,49" KeySpline="0.3,0 0.2,1"/>
-                <SplineRectKeyFrame KeyTime="0:0:0.95" Value="104,-14,192,48" KeySpline="0.2,0.8 0.3,1"/>
-                <SplineRectKeyFrame KeyTime="0:0:1.15" Value="110.5,-14,179,48" KeySpline="0.3,0 0.2,1"/>
+                <DiscreteRectKeyFrame KeyTime="0:0:0" Value="205,-80,30,46"/>
+                <SplineRectKeyFrame KeyTime="0:0:0.42" Value="205,6,30,38" KeySpline="0.2,0.7 0.3,1"/>
+                <SplineRectKeyFrame KeyTime="0:0:0.58" Value="205,6,30,30" KeySpline="0.3,0 0.2,1"/>
+                <SplineRectKeyFrame KeyTime="0:0:0.95" Value="123,6,194,32" KeySpline="0.2,0.8 0.3,1"/>
+                <SplineRectKeyFrame KeyTime="0:0:1.15" Value="130,6,180,32" KeySpline="0.3,0 0.2,1"/>
             </RectAnimationUsingKeyFrames>
-            <DoubleAnimation Storyboard.TargetName="Shape" Storyboard.TargetProperty="RadiusX" From="15" To="14" Duration="0:0:1.15"/>
-            <DoubleAnimation Storyboard.TargetName="Shape" Storyboard.TargetProperty="RadiusY" From="15" To="14" Duration="0:0:1.15"/>
+            <DoubleAnimation Storyboard.TargetName="Shape" Storyboard.TargetProperty="RadiusX" From="15" To="16" Duration="0:0:1.15"/>
+            <DoubleAnimation Storyboard.TargetName="Shape" Storyboard.TargetProperty="RadiusY" From="15" To="16" Duration="0:0:1.15"/>
             <DoubleAnimationUsingKeyFrames Storyboard.TargetName="Compact" Storyboard.TargetProperty="Opacity">
                 <LinearDoubleKeyFrame KeyTime="0:0:0.75" Value="0"/>
                 <LinearDoubleKeyFrame KeyTime="0:0:1.05" Value="1"/>
             </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimation Storyboard.TargetName="CompactScale" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.01"/>
+            <DoubleAnimation Storyboard.TargetName="CompactScale" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.01"/>
             <DoubleAnimation Storyboard.TargetName="Detail" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.01"/>
         </Storyboard>
     </Window.Resources>
 
     <!--
-        The window is a fixed, transparent 400x130 canvas. The glass is a clipped surface inside it, and animating the
-        clip (a GPU operation) is what makes the expansion smooth. Top corners sit above the screen edge, so only the
-        bottom corners show as rounded.
+        The window is a transparent canvas a little larger than the island (room for its shadow and for the spring to overshoot).
+        The glass is one shader pass over a picture of what is behind the window; its shape is the RectangleGeometry "Shape",
+        which also clips the content. Animating that one rectangle is the whole morph. The island floats 6 below the screen edge.
     -->
-    <Grid>
-        <Grid x:Name="Glass">
+    <Grid x:Name="Island" RenderTransformOrigin="0.5,0">
+        <Grid.RenderTransform><ScaleTransform x:Name="Press"/></Grid.RenderTransform>
+        <Grid.Triggers>
+            <!-- Any press: the whole island gives a little, and springs back on release -->
+            <EventTrigger RoutedEvent="PreviewMouseLeftButtonDown">
+                <BeginStoryboard><Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleX" To="0.975" Duration="0:0:0.12" EasingFunction="{StaticResource Smooth}"/>
+                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleY" To="0.975" Duration="0:0:0.12" EasingFunction="{StaticResource Smooth}"/>
+                    <DoubleAnimation Storyboard.TargetName="Flash" Storyboard.TargetProperty="Opacity" To="0.035" Duration="0:0:0.1"/>
+                </Storyboard></BeginStoryboard>
+            </EventTrigger>
+            <EventTrigger RoutedEvent="PreviewMouseLeftButtonUp">
+                <BeginStoryboard><Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.55" EasingFunction="{StaticResource Spring}"/>
+                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.55" EasingFunction="{StaticResource Spring}"/>
+                    <DoubleAnimation Storyboard.TargetName="Flash" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.4"/>
+                </Storyboard></BeginStoryboard>
+            </EventTrigger>
+            <EventTrigger RoutedEvent="MouseLeave">
+                <BeginStoryboard><Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.3"/>
+                    <DoubleAnimation Storyboard.TargetName="Press" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.3"/>
+                    <DoubleAnimation Storyboard.TargetName="Flash" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.3"/>
+                </Storyboard></BeginStoryboard>
+            </EventTrigger>
+        </Grid.Triggers>
+
+        <!-- The glass: what is really behind the island, frosted and bent at the edges, plus rim light and shadow (see LiquidGlass.fx) -->
+        <Image x:Name="BackdropImage" Stretch="Fill" Width="520" Height="456" HorizontalAlignment="Center" VerticalAlignment="Top" IsHitTestVisible="False">
+            <Image.Effect>
+                <core:LiquidGlassEffect ImageSize="520,456"
+                    Bounds="{Binding Rect, Source={x:Reference Shape}, Converter={StaticResource RectBounds}}"
+                    Radius="{Binding RadiusX, Source={x:Reference Shape}}"
+                    Tint="{Binding Agents.Settings.Store.Tint}"/>
+            </Image.Effect>
+        </Image>
+
+        <!-- The gap above the pill still counts as the island: throwing the mouse at the top of the screen opens it -->
+        <Rectangle Width="180" Height="8" Fill="#01000000" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+
+        <Grid x:Name="Glass" Background="Transparent">
             <Grid.ContextMenu>
                 <ContextMenu><MenuItem Header="Exit" Click="Exit_Click"/></ContextMenu>
             </Grid.ContextMenu>
             <Grid.Clip>
-                <RectangleGeometry x:Name="Shape" Rect="185,-96,30,62" RadiusX="15" RadiusY="15"/>
+                <RectangleGeometry x:Name="Shape" Rect="205,-80,30,46" RadiusX="15" RadiusY="15"/>
             </Grid.Clip>
 
-            <Grid.Triggers>
-                <!-- Press: the glass squeezes in and flashes; release springs it back -->
-                <EventTrigger RoutedEvent="MouseLeftButtonDown">
-                    <BeginStoryboard><Storyboard>
-                        <RectAnimation Storyboard.TargetName="Shape" Storyboard.TargetProperty="Rect" To="10.5,-30,379,192" Duration="0:0:0.12" EasingFunction="{StaticResource Smooth}"/>
-                        <DoubleAnimation Storyboard.TargetName="Flash" Storyboard.TargetProperty="Opacity" To="0.04" Duration="0:0:0.1"/>
-                    </Storyboard></BeginStoryboard>
-                </EventTrigger>
-
-                <EventTrigger RoutedEvent="MouseLeftButtonUp">
-                    <BeginStoryboard><Storyboard>
-                        <RectAnimation Storyboard.TargetName="Shape" Storyboard.TargetProperty="Rect" To="0.5,-30,399,200" Duration="0:0:0.5" EasingFunction="{StaticResource Spring}"/>
-                        <DoubleAnimation Storyboard.TargetName="Flash" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.5"/>
-                    </Storyboard></BeginStoryboard>
-                </EventTrigger>
-            </Grid.Triggers>
-
-            <!-- What is really behind the island, blurred -->
-            <Image x:Name="BackdropImage" Stretch="Fill" Width="480" Height="210" HorizontalAlignment="Center" VerticalAlignment="Top">
-                <Image.Effect>
-                    <core:LiquidGlassEffect ImageSize="480,210"
-                        Bounds="{Binding Rect, Source={x:Reference Shape}, Converter={StaticResource RectBounds}}"
-                        Radius="{Binding RadiusX, Source={x:Reference Shape}}"/>
-                </Image.Effect>
-            </Image>
-
-            <!-- Barely-there smoke so the clock stays readable; the glass itself stays clear -->
-            <Rectangle Opacity="{Binding Agents.Settings.Store.Tint}">
-                <Rectangle.Fill>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#9C121216" Offset="0"/>
-                        <GradientStop Color="#80121216" Offset="1"/>
-                    </LinearGradientBrush>
-                </Rectangle.Fill>
-            </Rectangle>
-
-            <!-- Diagonal sheen across the pane -->
+            <!-- Soft light falling across the pane from the top-left -->
             <Rectangle IsHitTestVisible="False">
                 <Rectangle.Fill>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Color="#0AFFFFFF" Offset="0"/>
-                        <GradientStop Color="#00FFFFFF" Offset="0.38"/>
-                        <GradientStop Color="#00FFFFFF" Offset="0.7"/>
+                        <GradientStop Color="#0CFFFFFF" Offset="0"/>
+                        <GradientStop Color="#00FFFFFF" Offset="0.4"/>
+                        <GradientStop Color="#00FFFFFF" Offset="0.75"/>
                         <GradientStop Color="#05FFFFFF" Offset="1"/>
                     </LinearGradientBrush>
                 </Rectangle.Fill>
@@ -366,12 +470,12 @@
 
             <Rectangle Fill="{x:Static core:GlassNoise.Brush}" IsHitTestVisible="False"/>
 
-            <!-- Hover light sweep -->
-            <Rectangle Width="130" HorizontalAlignment="Left" IsHitTestVisible="False">
+            <!-- Light sweep when the island opens -->
+            <Rectangle Width="150" HorizontalAlignment="Left" IsHitTestVisible="False">
                 <Rectangle.Fill>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                         <GradientStop Color="#00FFFFFF" Offset="0"/>
-                        <GradientStop Color="#08FFFFFF" Offset="0.5"/>
+                        <GradientStop Color="#0AFFFFFF" Offset="0.5"/>
                         <GradientStop Color="#00FFFFFF" Offset="1"/>
                     </LinearGradientBrush>
                 </Rectangle.Fill>
@@ -386,19 +490,20 @@
             <Rectangle x:Name="Flash" Fill="White" Opacity="0" IsHitTestVisible="False"/>
 
             <!-- Collapsed: the time in the middle; while media is active, a tiny cover on the left and an equalizer on the right -->
-            <Grid x:Name="Compact" Width="180" Height="34" HorizontalAlignment="Center" VerticalAlignment="Top" IsHitTestVisible="False">
+            <Grid x:Name="Compact" Width="180" Height="32" Margin="0,6,0,0" HorizontalAlignment="Center" VerticalAlignment="Top" IsHitTestVisible="False" RenderTransformOrigin="0.5,0.5">
+                <Grid.RenderTransform><ScaleTransform x:Name="CompactScale"/></Grid.RenderTransform>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <Border Grid.Column="0" Width="22" Height="22" CornerRadius="6" Margin="14,0,0,0" HorizontalAlignment="Left"
+                <Border Grid.Column="0" Width="22" Height="22" CornerRadius="7" Margin="7,0,0,0" HorizontalAlignment="Left"
                         Visibility="{Binding Agents.ShowCover, Converter={StaticResource BoolToVis}}" Background="#33FFFFFF">
-                    <Border.OpacityMask><VisualBrush><VisualBrush.Visual><Border Width="22" Height="22" CornerRadius="6" Background="Black"/></VisualBrush.Visual></VisualBrush></Border.OpacityMask>
+                    <Border.OpacityMask><VisualBrush><VisualBrush.Visual><Border Width="22" Height="22" CornerRadius="7" Background="Black"/></VisualBrush.Visual></VisualBrush></Border.OpacityMask>
                     <Image Source="{Binding Media.Art}" Stretch="UniformToFill"/>
                 </Border>
 
                 <!-- Nothing playing but an assistant is working: its badge (the pet, or the app's icon) takes the cover's place -->
-                <Grid Grid.Column="0" Width="30" Height="26" Margin="12,0,0,0" HorizontalAlignment="Left"
+                <Grid Grid.Column="0" Width="30" Height="26" Margin="6,0,0,0" HorizontalAlignment="Left"
                       Visibility="{Binding Agents.ShowCompactAgent, Converter={StaticResource BoolToVis}}">
                     <Viewbox Visibility="{Binding Agents.CompactAgent.HasPet, Converter={StaticResource BoolToVis}}">
                         <views:PetControl State="{Binding Agents.CompactAgent.Pet}"/>
@@ -407,13 +512,19 @@
                            Visibility="{Binding Agents.CompactAgent.HasSprite, Converter={StaticResource BoolToVis}}"/>
                     <Image Source="{Binding Agents.CompactAgent.Icon}" Width="20" Height="20" RenderOptions.BitmapScalingMode="HighQuality"
                            Visibility="{Binding Agents.CompactAgent.NoPet, Converter={StaticResource BoolToVis}}"/>
+                    <Path Data="{Binding Agents.CompactAgent.Logo}" Fill="White" Stretch="Uniform" Width="18" Height="18"
+                          Visibility="{Binding Agents.CompactAgent.NoPet, Converter={StaticResource BoolToVis}}"/>
                 </Grid>
+
+                <!-- Nothing playing, nobody working: the island's own face keeps the time company -->
+                <views:AvatarControl Grid.Column="0" Width="22" Height="22" Margin="6,0,0,0" HorizontalAlignment="Left"
+                                     Visibility="{Binding Agents.ShowAvatar, Converter={StaticResource BoolToVis}}"/>
                 <TextBlock Grid.Column="1" Text="{Binding Clock.Time}" Foreground="White"
                            FontFamily="{StaticResource InterSemiBold}" FontSize="14"
                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
                 <!-- Equalizer: only exists (and animates, at a low frame rate) while something is playing -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Height="14" Margin="0,0,16,0" HorizontalAlignment="Right" VerticalAlignment="Center"
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Height="14" Margin="0,0,12,0" HorizontalAlignment="Right" VerticalAlignment="Center"
                             Visibility="{Binding Media.IsPlaying, Converter={StaticResource BoolToVis}}">
                     <Rectangle Width="3" Height="14" RadiusX="1.5" RadiusY="1.5" Fill="White" Margin="0,0,2,0" VerticalAlignment="Bottom" RenderTransformOrigin="0.5,1">
                         <Rectangle.RenderTransform><ScaleTransform ScaleY="0.4"/></Rectangle.RenderTransform>
@@ -444,7 +555,7 @@
                     </Rectangle>
                 </StackPanel>
                 <!-- Working indicator for the notch: three dots that light up in turn (animates only while shown) -->
-                <views:DotsControl Grid.Column="2" Margin="0,0,14,0" HorizontalAlignment="Right" VerticalAlignment="Center"
+                <views:DotsControl Grid.Column="2" Margin="0,0,11,0" HorizontalAlignment="Right" VerticalAlignment="Center"
                                    Fill="{Binding Agents.CompactAgent.Accent}" Active="{Binding Agents.ShowCompactAgent}"
                                    Visibility="{Binding Agents.ShowCompactAgent, Converter={StaticResource BoolToVis}}"/>
 
@@ -455,7 +566,7 @@
                 </StackPanel>
 
                 <!-- Volume / brightness: a bar that covers the clock for a moment -->
-                <Border Grid.ColumnSpan="3" CornerRadius="14" Background="#F0141418" Margin="6,0"
+                <Border Grid.ColumnSpan="3" CornerRadius="13" Background="#F0141418" Margin="3"
                         Visibility="{Binding Hud.Showing, Converter={StaticResource BoolToVis}}">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                         <TextBlock Text="{Binding Hud.Glyph}" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" Foreground="White" Width="22" VerticalAlignment="Center"/>
@@ -467,12 +578,33 @@
             </Grid>
 
             <!-- Expanded: media player when something is playing, otherwise the big clock -->
-            <Grid x:Name="Detail" Opacity="0" Height="170" VerticalAlignment="Top">
-              <Grid x:Name="MainBody" Height="130" VerticalAlignment="Top">
-                <Grid.RenderTransform><TranslateTransform x:Name="MainSlide"/></Grid.RenderTransform>
+            <!-- In a Canvas so it always has its natural height, whatever the window's: the window and the glass are then fitted to it (IslandWindow.Fit) -->
+            <Canvas>
+            <Grid x:Name="Detail" Opacity="0" Width="400" Canvas.Left="20" Canvas.Top="6" RenderTransformOrigin="0.5,0">
+              <Grid.RenderTransform><ScaleTransform x:Name="DetailScale" ScaleX="0.72" ScaleY="0.5"/></Grid.RenderTransform>
+              <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="40"/></Grid.RowDefinitions>
+              <!-- Volume / brightness while the island is open: appears over the top of the view; the volume one can be pressed or dragged -->
+              <Border Grid.RowSpan="2" Panel.ZIndex="5" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,8,0,0" Width="236" Height="34" CornerRadius="17"
+                      Background="#E6141418" BorderBrush="#2EFFFFFF" BorderThickness="1" IsHitTestVisible="{Binding Agents.Expanded}"
+                      Visibility="{Binding Hud.Showing, Converter={StaticResource BoolToVis}}">
+                  <Grid Margin="14,0">
+                      <Grid.ColumnDefinitions><ColumnDefinition Width="24"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                      <TextBlock Text="{Binding Hud.Glyph}" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" Foreground="White" VerticalAlignment="Center"/>
+                      <Grid Grid.Column="1" Height="26" Background="Transparent" Cursor="Hand" VerticalAlignment="Center"
+                            MouseLeftButtonDown="Volume_Set" MouseMove="Volume_Set" MouseLeftButtonUp="Volume_Release">
+                          <Rectangle Height="6" RadiusX="3" RadiusY="3" Fill="#38FFFFFF" IsHitTestVisible="False"/>
+                          <Rectangle Height="6" RadiusX="3" RadiusY="3" Fill="White" IsHitTestVisible="False" RenderTransformOrigin="0,0.5">
+                              <Rectangle.RenderTransform><ScaleTransform ScaleX="{Binding Hud.Level}"/></Rectangle.RenderTransform>
+                          </Rectangle>
+                      </Grid>
+                  </Grid>
+              </Border>
+              <!-- Every view is 130 tall except Claude's questions, which take the room they need: the island grows with them -->
+              <Grid x:Name="MainBody" MinHeight="130" MaxHeight="380" RenderTransformOrigin="0.5,0.5">
+                <Grid.RenderTransform><ScaleTransform x:Name="MainScale"/></Grid.RenderTransform>
                 <!-- Player view: the media player, or the clock when nothing plays -->
-                <Grid Visibility="{Binding Agents.ShowPlayer, Converter={StaticResource BoolToVis}}">
-                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,8,0,0" IsHitTestVisible="False">
+                <Grid Height="130" Visibility="{Binding Agents.ShowPlayer, Converter={StaticResource BoolToVis}}">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,6,0,0" IsHitTestVisible="False">
                     <StackPanel.Style>
                         <Style TargetType="StackPanel">
                             <Style.Triggers>
@@ -480,17 +612,21 @@
                             </Style.Triggers>
                         </Style>
                     </StackPanel.Style>
-                    <TextBlock Text="{Binding Clock.Time}" Foreground="White" TextAlignment="Center"
-                               FontFamily="{StaticResource InterSemiBold}" FontSize="36"/>
-                    <TextBlock Text="{Binding Clock.Date}" Foreground="#C8FFFFFF" TextAlignment="Center" Margin="0,2,0,0"
-                               FontFamily="{StaticResource Inter}" FontSize="13"/>
+                    <views:AvatarControl Width="76" Height="76" Active="{Binding Agents.Expanded}"/>
+                    <StackPanel Margin="22,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Clock.Greeting}" Foreground="#B4C2FF" FontFamily="{StaticResource InterSemiBold}" FontSize="11"/>
+                        <TextBlock Text="{Binding Clock.Time}" Foreground="White" Margin="-1,0,0,0"
+                                   FontFamily="{StaticResource InterSemiBold}" FontSize="34"/>
+                        <TextBlock Text="{Binding Clock.Date}" Foreground="#C8FFFFFF"
+                                   FontFamily="{StaticResource Inter}" FontSize="12.5"/>
+                    </StackPanel>
                 </StackPanel>
 
                 <Grid Margin="22,16,22,12" Visibility="{Binding Media.HasMedia, Converter={StaticResource BoolToVis}}">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
 
                     <!-- Cover: wide thumbnails get a wider tile; players without artwork show their logo. Click opens the app. -->
-                    <Border Width="{Binding Media.CoverWidth}" Height="82" VerticalAlignment="Center" CornerRadius="14" Background="#2EFFFFFF" Cursor="Hand">
+                    <Border Width="{Binding Media.CoverWidth}" Height="82" VerticalAlignment="Center" CornerRadius="16" Background="#24FFFFFF" BorderBrush="#24FFFFFF" BorderThickness="1" Cursor="Hand">
                         <Border.InputBindings><MouseBinding Gesture="LeftClick" Command="{Binding Media.OpenSource}"/></Border.InputBindings>
                         <Grid>
                             <TextBlock Text="&#xE8D6;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="30" Foreground="#80FFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -501,12 +637,12 @@
                                     </Style>
                                 </TextBlock.Style>
                             </TextBlock>
-                            <Border CornerRadius="14" Visibility="{Binding Media.ArtIsPicture, Converter={StaticResource BoolToVis}}">
+                            <Border CornerRadius="15" Visibility="{Binding Media.ArtIsPicture, Converter={StaticResource BoolToVis}}">
                                 <Border.Background><ImageBrush ImageSource="{Binding Media.Art}" Stretch="UniformToFill"/></Border.Background>
                             </Border>
                             <Image Source="{Binding Media.Art}" Margin="18" RenderOptions.BitmapScalingMode="HighQuality"
                                    Visibility="{Binding Media.ArtIsLogo, Converter={StaticResource BoolToVis}}"/>
-                            <Border CornerRadius="14" Background="White">
+                            <Border CornerRadius="15" Background="White">
                                 <Border.Style>
                                     <Style TargetType="Border">
                                         <Setter Property="Opacity" Value="0"/>
@@ -530,8 +666,8 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{Binding Media.Elapsed}" Foreground="#99FFFFFF" FontFamily="{StaticResource Inter}" FontSize="10" VerticalAlignment="Center" MinWidth="26"/>
                             <Grid Grid.Column="1" Margin="8,0" Background="Transparent" Cursor="Hand" MouseLeftButtonDown="Track_MouseDown">
-                                <Rectangle Height="4" RadiusX="2" RadiusY="2" Fill="#40FFFFFF" IsHitTestVisible="False"/>
-                                <Rectangle Height="4" RadiusX="2" RadiusY="2" Fill="White" HorizontalAlignment="Stretch" IsHitTestVisible="False" RenderTransformOrigin="0,0.5">
+                                <Rectangle Height="5" RadiusX="2.5" RadiusY="2.5" Fill="#33FFFFFF" IsHitTestVisible="False"/>
+                                <Rectangle Height="5" RadiusX="2.5" RadiusY="2.5" Fill="White" HorizontalAlignment="Stretch" IsHitTestVisible="False" RenderTransformOrigin="0,0.5">
                                     <Rectangle.RenderTransform><ScaleTransform ScaleX="{Binding Media.Progress}"/></Rectangle.RenderTransform>
                                 </Rectangle>
                             </Grid>
@@ -569,7 +705,7 @@
                 </Grid>
 
                 <!-- Agent view: the pet (Claude) or the app's logo, and what that assistant is doing right now -->
-                <Grid Margin="22,12,22,8" Background="Transparent" Cursor="Hand" Visibility="{Binding Agents.ShowAgent, Converter={StaticResource BoolToVis}}"
+                <Grid Height="110" Margin="22,12,22,8" Background="Transparent" Cursor="Hand" Visibility="{Binding Agents.ShowAgent, Converter={StaticResource BoolToVis}}"
                       ToolTip="Click to open this app">
                     <Grid.InputBindings><MouseBinding Gesture="LeftClick" Command="{Binding Agents.SelectedAgent.Open}"/></Grid.InputBindings>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
@@ -585,17 +721,24 @@
 
                     <!-- apps without a pet: their logo on a tinted tile -->
                     <Grid Width="84" Height="84" Margin="16,0" VerticalAlignment="Center" Visibility="{Binding Agents.SelectedAgent.NoPet, Converter={StaticResource BoolToVis}}">
-                        <Border CornerRadius="20" Background="{Binding Agents.SelectedAgent.Accent}" Opacity="0.28"/>
+                        <Border CornerRadius="24" Background="{Binding Agents.SelectedAgent.Accent}" Opacity="0.34"/>
+                        <Border CornerRadius="24" BorderBrush="#2EFFFFFF" BorderThickness="1"/>
+                        <Path Data="{Binding Agents.SelectedAgent.Logo}" Fill="White" Stretch="Uniform" Margin="21"/>
                         <TextBlock Text="{Binding Agents.SelectedAgent.Glyph}" FontFamily="{Binding Agents.SelectedAgent.GlyphFont}" Foreground="White" FontSize="30" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                   Visibility="{Binding Agents.SelectedAgent.NoIcon, Converter={StaticResource BoolToVis}}"/>
+                                   Visibility="{Binding Agents.SelectedAgent.ShowGlyph, Converter={StaticResource BoolToVis}}"/>
                         <Image Source="{Binding Agents.SelectedAgent.Icon}" Margin="16" RenderOptions.BitmapScalingMode="HighQuality"
                                Visibility="{Binding Agents.SelectedAgent.HasIcon, Converter={StaticResource BoolToVis}}"/>
                     </Grid>
 
                     <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="{Binding Agents.SelectedAgent.Name}" Foreground="{Binding Agents.SelectedAgent.Accent}" FontFamily="{StaticResource InterSemiBold}" FontSize="10.5"/>
-                        <TextBlock Text="{Binding Agents.SelectedAgent.Headline}" Foreground="White" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"
-                                   FontFamily="{StaticResource InterSemiBold}" FontSize="14"/>
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="7" Height="7" Fill="{Binding Agents.SelectedAgent.Accent}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding Agents.SelectedAgent.Name}" Foreground="{Binding Agents.SelectedAgent.Accent}" FontFamily="{StaticResource InterSemiBold}" FontSize="10.5" Margin="7,0,9,0" VerticalAlignment="Center"/>
+                            <views:DotsControl VerticalAlignment="Center" Fill="{Binding Agents.SelectedAgent.Accent}" Active="{Binding Agents.SelectedAgent.Live}"
+                                               Visibility="{Binding Agents.SelectedAgent.IsWorking, Converter={StaticResource BoolToVis}}"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding Agents.SelectedAgent.Headline}" Foreground="White" TextTrimming="CharacterEllipsis" Margin="0,4,0,0"
+                                   FontFamily="{StaticResource InterSemiBold}" FontSize="15"/>
                         <TextBlock Text="{Binding Agents.SelectedAgent.Body}" Foreground="#C8FFFFFF" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxHeight="48" Margin="0,3,0,0"
                                    FontFamily="{StaticResource Inter}" FontSize="12" LineHeight="16" LineStackingStrategy="BlockLineHeight"/>
                         <TextBlock Text="{Binding Agents.SelectedAgent.Meta}" Foreground="#8FFFFFFF" TextTrimming="CharacterEllipsis" Margin="0,4,0,0"
@@ -603,7 +746,7 @@
                     </StackPanel>
                 </Grid>
                 <!-- Clipboard view: recent copies. Click one and it is pasted where you were typing. -->
-                <Grid Margin="16,8,16,4" Visibility="{Binding Agents.ShowClipboard, Converter={StaticResource BoolToVis}}">
+                <Grid Height="118" Margin="16,8,16,4" Visibility="{Binding Agents.ShowClipboard, Converter={StaticResource BoolToVis}}">
                     <Grid.RowDefinitions><RowDefinition Height="22"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                     <Grid>
                         <TextBlock Text="Clipboard" Foreground="White" FontFamily="{StaticResource InterSemiBold}" FontSize="12.5" VerticalAlignment="Center"/>
@@ -628,7 +771,7 @@
                                         <Grid>
                                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                             <!-- green flash when this row has just been pasted -->
-                                            <Border Grid.ColumnSpan="2" Margin="-10,-8" CornerRadius="9" Background="#4DD0A0" Opacity="0" IsHitTestVisible="False">
+                                            <Border Grid.ColumnSpan="2" Margin="-11,-8" CornerRadius="11" Background="#4DD0A0" Opacity="0" IsHitTestVisible="False">
                                                 <Border.Style>
                                                     <Style TargetType="Border"><Style.Triggers>
                                                         <DataTrigger Binding="{Binding JustPasted}" Value="True">
@@ -663,7 +806,7 @@
                 </Grid>
 
                 <!-- Power view: lock and sleep act at once; sign out, restart and shut down turn red and need a second tap -->
-                <Grid Margin="14,8,14,4" Visibility="{Binding Agents.ShowPower, Converter={StaticResource BoolToVis}}">
+                <Grid Height="118" Margin="14,8,14,4" Visibility="{Binding Agents.ShowPower, Converter={StaticResource BoolToVis}}">
                     <ItemsControl ItemsSource="{Binding Agents.Power.Actions}" VerticalAlignment="Center">
                         <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Rows="1"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
@@ -672,16 +815,17 @@
                                         Command="{Binding DataContext.Agents.Power.Invoke, RelativeSource={RelativeSource AncestorType=Window}}"
                                         CommandParameter="{Binding}">
                                     <StackPanel HorizontalAlignment="Center">
-                                        <Grid Width="46" Height="46">
+                                        <Grid Width="48" Height="48">
                                             <Ellipse>
                                                 <Ellipse.Style>
-                                                    <Style TargetType="Ellipse"><Setter Property="Fill" Value="White"/><Setter Property="Opacity" Value="0.12"/><Style.Triggers>
+                                                    <Style TargetType="Ellipse"><Setter Property="Fill" Value="White"/><Setter Property="Opacity" Value="0.11"/><Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsArmed}" Value="True">
                                                             <Setter Property="Fill" Value="#E5484D"/><Setter Property="Opacity" Value="0.95"/>
                                                         </DataTrigger>
                                                     </Style.Triggers></Style>
                                                 </Ellipse.Style>
                                             </Ellipse>
+                                            <Ellipse Stroke="#24FFFFFF" StrokeThickness="1"/>
                                             <TextBlock Text="{Binding Glyph}" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="20" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Grid>
                                         <TextBlock Text="{Binding Label}" HorizontalAlignment="Center" Margin="0,6,0,0" FontFamily="{StaticResource InterSemiBold}" FontSize="11">
@@ -698,7 +842,7 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </Grid>                <!-- Screenshots view: the newest three. Drag one into any app, or double-click to open it. -->
-                <Grid Margin="16,8,16,6" Visibility="{Binding Agents.ShowScreenshots, Converter={StaticResource BoolToVis}}">
+                <Grid Height="116" Margin="16,8,16,6" Visibility="{Binding Agents.ShowScreenshots, Converter={StaticResource BoolToVis}}">
                     <Grid.RowDefinitions><RowDefinition Height="22"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                     <Grid>
                         <TextBlock Text="Screenshots" Foreground="White" FontFamily="{StaticResource InterSemiBold}" FontSize="12.5" VerticalAlignment="Center"/>
@@ -708,7 +852,7 @@
                         <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Rows="1" Columns="3"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Margin="3,0" CornerRadius="10" Cursor="SizeAll" PreviewMouseLeftButtonDown="Shot_MouseDown" MouseMove="Shot_MouseMove">
+                                <Border Margin="3,0" CornerRadius="12" BorderBrush="#24FFFFFF" BorderThickness="1" Cursor="SizeAll" PreviewMouseLeftButtonDown="Shot_MouseDown" MouseMove="Shot_MouseMove">
                                     <Border.Background><ImageBrush ImageSource="{Binding Thumbnail}" Stretch="UniformToFill"/></Border.Background>
                                     <Grid>
                                         <Border CornerRadius="10" Background="White">
@@ -730,7 +874,7 @@
                 </Grid>
 
                 <!-- Ports view: ports something other than Windows has open. Tap the cross twice to end that program. -->
-                <Grid Margin="16,8,16,4" Visibility="{Binding Agents.ShowPorts, Converter={StaticResource BoolToVis}}">
+                <Grid Height="118" Margin="16,8,16,4" Visibility="{Binding Agents.ShowPorts, Converter={StaticResource BoolToVis}}">
                     <Grid.RowDefinitions><RowDefinition Height="22"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                     <Grid>
                         <TextBlock Text="Open ports" Foreground="White" FontFamily="{StaticResource InterSemiBold}" FontSize="12.5" VerticalAlignment="Center"/>
@@ -740,7 +884,7 @@
                         <ItemsControl ItemsSource="{Binding Agents.Ports.Entries}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Height="38" Margin="0,0,0,3" CornerRadius="9" Background="#12FFFFFF">
+                                    <Border Height="40" Margin="0,0,0,4" CornerRadius="12" Background="#10FFFFFF" BorderBrush="#14FFFFFF" BorderThickness="1">
                                         <Grid Margin="10,0,6,0">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="62"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/>
@@ -776,74 +920,88 @@
                     </ScrollViewer>
                 </Grid>
 
-                <!-- Approval view: Claude Code is asking. Frosted panes only: quiet buttons, the main answer is the brighter pane. -->
-                <Grid Margin="18,8,18,6" DataContext="{Binding Agents.Approvals}" Visibility="{Binding DataContext.Agents.ShowApproval, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
+                <!--
+                    Approval view: Claude Code is asking. The only view with no fixed height: the island grows to fit the command or the
+                    list of answers. Quiet glass rows; the one solid white button is always the way forward.
+                -->
+                <Grid Margin="18,14,18,12" DataContext="{Binding Agents.Approvals}" Visibility="{Binding DataContext.Agents.ShowApproval, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
 
                   <!-- A permission: run this command / change this file -->
-                  <Grid Visibility="{Binding Current.IsPermission, Converter={StaticResource BoolToVis}}">
-                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="32"/></Grid.RowDefinitions>
+                  <StackPanel Visibility="{Binding Current.IsPermission, Converter={StaticResource BoolToVis}}">
+                    <StackPanel.RenderTransform><TranslateTransform/></StackPanel.RenderTransform>
+                    <StackPanel.Triggers>
+                        <EventTrigger RoutedEvent="Binding.TargetUpdated"><BeginStoryboard Storyboard="{StaticResource NextQuestion}"/></EventTrigger>
+                    </StackPanel.Triggers>
                     <Grid>
-                        <TextBlock Text="{Binding Current.Heading}" Foreground="White" FontFamily="{StaticResource InterSemiBold}" FontSize="13"/>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Ellipse Width="7" Height="7" Fill="#FFB454" VerticalAlignment="Center"/>
+                            <TextBlock Text="Claude Code" Foreground="#FFB454" FontFamily="{StaticResource InterSemiBold}" FontSize="10.5" Margin="7,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
                         <TextBlock Text="{Binding Current.Project}" Foreground="#80FFFFFF" FontFamily="{StaticResource Inter}" FontSize="10.5" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                     </Grid>
-                    <Border Grid.Row="1" Margin="0,7,0,8" CornerRadius="12" Background="#0EFFFFFF" BorderBrush="#18FFFFFF" BorderThickness="1" Padding="12,7">
-                        <TextBlock Text="{Binding Current.Summary}" Foreground="#E0FFFFFF" FontFamily="Cascadia Mono, Consolas" FontSize="11" TextWrapping="Wrap" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="{Binding Current.Heading, NotifyOnTargetUpdated=True}" Foreground="White" FontFamily="{StaticResource InterSemiBold}" FontSize="15" Margin="0,7,0,0"/>
+                    <Border Margin="0,9,0,0" CornerRadius="12" Background="#38000000" BorderBrush="#14FFFFFF" BorderThickness="1" Padding="12,9">
+                        <TextBlock Text="{Binding Current.Summary}" Foreground="#E6FFFFFF" FontFamily="Cascadia Mono, Consolas" FontSize="11.5" LineHeight="16" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxHeight="80"/>
                     </Border>
-                    <Grid Grid.Row="2">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                        <Button Style="{StaticResource ActionBtn}" Command="{Binding Deny}" Margin="0,0,6,0">
-                            <TextBlock Text="Deny" FontFamily="{StaticResource InterSemiBold}" FontSize="12.5"/>
-                        </Button>
-                        <Button Grid.Column="1" Style="{StaticResource LinkBtn}" Command="{Binding Later}" ToolTip="Let Claude ask in its own window" Margin="4,0">
-                            <TextBlock Text="Ask in Claude" FontFamily="{StaticResource Inter}" FontSize="10.5" VerticalAlignment="Center"/>
-                        </Button>
-                        <Button Grid.Column="2" Style="{StaticResource ActionBtn}" Tag="primary" Command="{Binding Allow}" Margin="6,0,0,0">
-                            <TextBlock Text="Allow" FontFamily="{StaticResource InterSemiBold}" FontSize="12.5"/>
-                        </Button>
-                    </Grid>
-                  </Grid>
-
-                  <!-- A question: pick one or several options, or write your own answer -->
-                  <Grid Visibility="{Binding IsQuestion, Converter={StaticResource BoolToVis}}" DataContext="{Binding Current}">
-                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="32"/></Grid.RowDefinitions>
-                    <Grid>
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Text="{Binding Question.Text}" Foreground="White" FontFamily="{StaticResource InterSemiBold}" FontSize="13" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxHeight="36" Margin="0,0,10,0"/>
-                        <Button Grid.Column="1" Style="{StaticResource LinkBtn}" VerticalAlignment="Top" Margin="0,2,0,0" ToolTip="Let Claude ask in its own window"
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="96"/><ColumnDefinition Width="8"/><ColumnDefinition Width="96"/></Grid.ColumnDefinitions>
+                        <Button Style="{StaticResource LinkBtn}" HorizontalAlignment="Left" VerticalAlignment="Center" ToolTip="Let Claude ask in its own window"
                                 Command="{Binding DataContext.Agents.Approvals.Later, RelativeSource={RelativeSource AncestorType=Window}}">
-                            <TextBlock Text="Ask in Claude" FontFamily="{StaticResource Inter}" FontSize="10"/>
+                            <TextBlock Text="Ask in Claude instead" FontFamily="{StaticResource Inter}" FontSize="11"/>
                         </Button>
+                        <Button Grid.Column="1" Style="{StaticResource ActionBtn}" Command="{Binding Deny}" Content="Deny"/>
+                        <Button Grid.Column="3" Style="{StaticResource ActionBtn}" Tag="primary" Command="{Binding Allow}" Content="Allow"/>
                     </Grid>
-                    <ScrollViewer Grid.Row="1" Margin="0,5,0,0" VerticalScrollBarVisibility="Hidden">
+                  </StackPanel>
+
+                  <!-- A question: pick one or several answers, or write your own -->
+                  <StackPanel Visibility="{Binding IsQuestion, Converter={StaticResource BoolToVis}}" DataContext="{Binding Current}">
+                    <StackPanel.RenderTransform><TranslateTransform/></StackPanel.RenderTransform>
+                    <StackPanel.Triggers>
+                        <EventTrigger RoutedEvent="Binding.TargetUpdated"><BeginStoryboard Storyboard="{StaticResource NextQuestion}"/></EventTrigger>
+                    </StackPanel.Triggers>
+                    <Grid>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Ellipse Width="7" Height="7" Fill="#FFB454" VerticalAlignment="Center"/>
+                            <TextBlock Text="Claude is asking" Foreground="#FFB454" FontFamily="{StaticResource InterSemiBold}" FontSize="10.5" Margin="7,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding StepText}" Foreground="#80FFFFFF" FontFamily="{StaticResource Inter}" FontSize="10.5" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                    </Grid>
+                    <TextBlock Text="{Binding Question.Text, NotifyOnTargetUpdated=True}" Foreground="White" FontFamily="{StaticResource InterSemiBold}" FontSize="15" LineHeight="20" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxHeight="60" Margin="0,7,0,0"/>
+                    <TextBlock Text="{Binding Question.Hint}" Foreground="#80FFFFFF" FontFamily="{StaticResource Inter}" FontSize="10.5" Margin="0,3,0,0"/>
+                    <ScrollViewer Margin="0,9,0,0" MaxHeight="214" VerticalScrollBarVisibility="Hidden">
                         <ItemsControl ItemsSource="{Binding Question.Items}">
-                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                             <ItemsControl.Resources>
                                 <DataTemplate DataType="{x:Type ap:OptionItem}">
-                                    <Button Margin="0,0,6,4" ToolTip="{Binding Description}" Content="{Binding Label}" MaxWidth="330"
-                                            Command="{Binding DataContext.Agents.Approvals.Current.Choose, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}">
+                                    <Button Command="{Binding DataContext.Agents.Approvals.Current.Choose, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}">
                                         <Button.Style>
-                                            <Style TargetType="Button" BasedOn="{StaticResource ChoiceChip}">
+                                            <Style TargetType="Button" BasedOn="{StaticResource OptionRow}">
                                                 <Style.Triggers><DataTrigger Binding="{Binding IsSelected}" Value="True"><Setter Property="Tag" Value="selected"/></DataTrigger></Style.Triggers>
                                             </Style>
                                         </Button.Style>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Label}" Foreground="White" FontFamily="{StaticResource InterSemiBold}" FontSize="12.5" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding Description}" Foreground="#99FFFFFF" FontFamily="{StaticResource Inter}" FontSize="11" LineHeight="14.5" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxHeight="29" Margin="0,1,0,0"
+                                                       Visibility="{Binding HasDescription, Converter={StaticResource BoolToVis}}"/>
+                                        </StackPanel>
                                     </Button>
                                 </DataTemplate>
                                 <DataTemplate DataType="{x:Type ap:OtherChip}">
-                                    <Button Margin="0,0,6,4" Content="Write my own"
-                                            Command="{Binding DataContext.Agents.Approvals.Current.Choose, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="other">
+                                    <Button Command="{Binding DataContext.Agents.Approvals.Current.Choose, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="other">
                                         <Button.Style>
-                                            <Style TargetType="Button" BasedOn="{StaticResource ChoiceChip}">
+                                            <Style TargetType="Button" BasedOn="{StaticResource OptionRow}">
                                                 <Style.Triggers><DataTrigger Binding="{Binding Question.OtherOn}" Value="True"><Setter Property="Tag" Value="selected"/></DataTrigger></Style.Triggers>
                                             </Style>
                                         </Button.Style>
+                                        <TextBlock Text="Something else…" Foreground="White" FontFamily="{StaticResource InterSemiBold}" FontSize="12.5"/>
                                     </Button>
                                 </DataTemplate>
                                 <!-- typing needs the keyboard: the island lends itself to it only while you write (see Type_MouseDown) -->
                                 <DataTemplate DataType="{x:Type ap:OtherInput}">
-                                    <Border Width="210" Height="26" Margin="0,0,6,2" CornerRadius="13" Background="#0EFFFFFF" BorderBrush="#40FFFFFF" BorderThickness="1"
+                                    <Border Height="36" Margin="0,0,0,5" CornerRadius="13" Background="#38000000" BorderBrush="#59FFFFFF" BorderThickness="1"
                                             Visibility="{Binding Question.OtherOn, Converter={StaticResource BoolToVis}}">
-                                        <Grid Margin="12,0">
-                                            <TextBlock Text="Type your answer" Foreground="#66FFFFFF" FontFamily="{StaticResource Inter}" FontSize="11.5" VerticalAlignment="Center" IsHitTestVisible="False" Visibility="Collapsed">
+                                        <Grid Margin="13,0">
+                                            <TextBlock Text="Type your answer" Foreground="#66FFFFFF" FontFamily="{StaticResource Inter}" FontSize="12.5" VerticalAlignment="Center" IsHitTestVisible="False">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -852,7 +1010,7 @@
                                                 </TextBlock.Style>
                                             </TextBlock>
                                             <TextBox Text="{Binding Question.OtherText, UpdateSourceTrigger=PropertyChanged}" Background="Transparent" BorderThickness="0" Foreground="White" CaretBrush="White"
-                                                     FontFamily="{StaticResource Inter}" FontSize="11.5" VerticalAlignment="Center" VerticalContentAlignment="Center" Padding="0"
+                                                     FontFamily="{StaticResource Inter}" FontSize="12.5" VerticalAlignment="Center" VerticalContentAlignment="Center" Padding="0"
                                                      PreviewMouseLeftButtonDown="Type_MouseDown" IsVisibleChanged="Type_Shown">
                                                 <TextBox.InputBindings>
                                                     <KeyBinding Key="Return" Command="{Binding DataContext.Agents.Approvals.Current.Submit, RelativeSource={RelativeSource AncestorType=Window}}"/>
@@ -864,17 +1022,18 @@
                             </ItemsControl.Resources>
                         </ItemsControl>
                     </ScrollViewer>
-                    <Grid Grid.Row="2">
-                        <TextBlock Text="{Binding StepText}" Foreground="#80FFFFFF" FontFamily="{StaticResource Inter}" FontSize="10.5" VerticalAlignment="Center"/>
-                        <Button HorizontalAlignment="Right" MinWidth="104" Style="{StaticResource ActionBtn}" Tag="primary" Command="{Binding Submit}" IsEnabled="{Binding Question.CanAnswer}">
-                            <TextBlock Text="{Binding SendLabel}" FontFamily="{StaticResource InterSemiBold}" FontSize="12.5" Margin="18,0"/>
+                    <Grid Margin="0,7,0,0">
+                        <Button Style="{StaticResource LinkBtn}" HorizontalAlignment="Left" VerticalAlignment="Center" ToolTip="Let Claude ask in its own window"
+                                Command="{Binding DataContext.Agents.Approvals.Later, RelativeSource={RelativeSource AncestorType=Window}}">
+                            <TextBlock Text="Ask in Claude instead" FontFamily="{StaticResource Inter}" FontSize="11"/>
                         </Button>
+                        <Button HorizontalAlignment="Right" Width="112" Style="{StaticResource ActionBtn}" Tag="primary" Command="{Binding Submit}" IsEnabled="{Binding Question.CanAnswer}" Content="{Binding SendLabel}"/>
                     </Grid>
-                  </Grid>
+                  </StackPanel>
                 </Grid>
 
-                <!-- Settings view: which buttons show, how dark the glass is, which key opens the island -->
-                <Grid Margin="16,8,16,4" Visibility="{Binding Agents.ShowSettings, Converter={StaticResource BoolToVis}}">
+                <!-- Settings view: which buttons show, which glass (liquid / clear / frosted / dark), which key opens the island -->
+                <Grid Height="118" Margin="16,8,16,4" Visibility="{Binding Agents.ShowSettings, Converter={StaticResource BoolToVis}}">
                     <Grid.RowDefinitions><RowDefinition Height="22"/><RowDefinition Height="*"/><RowDefinition Height="30"/></Grid.RowDefinitions>
                     <TextBlock Text="Settings" Foreground="White" FontFamily="{StaticResource InterSemiBold}" FontSize="12.5" VerticalAlignment="Center"/>
                     <TextBlock Text="Tap a button to show or hide it" Foreground="#8FFFFFFF" FontFamily="{StaticResource Inter}" FontSize="10.5" HorizontalAlignment="Right" VerticalAlignment="Center"/>
@@ -882,18 +1041,26 @@
                         <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Button Style="{StaticResource ClipRow}" Width="88" Margin="0,0,3,5" Height="26"
+                                <Button Style="{StaticResource ClipRow}" Width="88" Margin="0,0,4,5" Height="27"
                                         Command="{Binding DataContext.Agents.Settings.Toggle, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}">
+                                    <!-- on = a bright pane with white text; off = a faint one with dim text -->
                                     <Grid>
-                                        <TextBlock Text="{Binding Name}" Foreground="White" FontFamily="{StaticResource InterSemiBold}" FontSize="10" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                        <Ellipse Width="7" Height="7" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                            <Ellipse.Style>
-                                                <Style TargetType="Ellipse">
-                                                    <Setter Property="Fill" Value="#4DFFFFFF"/>
-                                                    <Style.Triggers><DataTrigger Binding="{Binding IsOn}" Value="True"><Setter Property="Fill" Value="#34C759"/></DataTrigger></Style.Triggers>
+                                        <Border Margin="-11,-6" CornerRadius="11" Background="White" IsHitTestVisible="False">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Opacity" Value="0"/>
+                                                    <Style.Triggers><DataTrigger Binding="{Binding IsOn}" Value="True"><Setter Property="Opacity" Value="0.14"/></DataTrigger></Style.Triggers>
                                                 </Style>
-                                            </Ellipse.Style>
-                                        </Ellipse>
+                                            </Border.Style>
+                                        </Border>
+                                        <TextBlock Text="{Binding Name}" Foreground="White" FontFamily="{StaticResource InterSemiBold}" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Opacity" Value="0.45"/>
+                                                    <Style.Triggers><DataTrigger Binding="{Binding IsOn}" Value="True"><Setter Property="Opacity" Value="1"/></DataTrigger></Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
                                     </Grid>
                                 </Button>
                             </DataTemplate>
@@ -901,14 +1068,35 @@
                     </ItemsControl>
                     <Grid Grid.Row="2">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="Glass tint" Foreground="#C8FFFFFF" FontFamily="{StaticResource Inter}" FontSize="11" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <Button Style="{StaticResource Ctl}" Width="26" Height="24" FontSize="11" Content="&#xE738;" Command="{Binding Agents.Settings.TintDown}"/>
-                            <TextBlock Text="{Binding Agents.Settings.Store.TintText}" Foreground="White" FontFamily="{StaticResource InterSemiBold}" FontSize="11" Width="34" TextAlignment="Center" VerticalAlignment="Center"/>
-                            <Button Style="{StaticResource Ctl}" Width="26" Height="24" FontSize="11" Content="&#xE710;" Command="{Binding Agents.Settings.TintUp}"/>
+                            <TextBlock Text="Glass" Foreground="#C8FFFFFF" FontFamily="{StaticResource Inter}" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <Border CornerRadius="13" Background="#14FFFFFF" Padding="2">
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="Liquid" Command="{Binding Agents.Settings.SetGlass}" CommandParameter="0">
+                                        <Button.Style><Style TargetType="Button" BasedOn="{StaticResource Segment}"><Style.Triggers>
+                                            <DataTrigger Binding="{Binding Agents.Settings.Store.Glass}" Value="0"><Setter Property="Tag" Value="selected"/></DataTrigger>
+                                        </Style.Triggers></Style></Button.Style>
+                                    </Button>
+                                    <Button Content="Clear" Command="{Binding Agents.Settings.SetGlass}" CommandParameter="1">
+                                        <Button.Style><Style TargetType="Button" BasedOn="{StaticResource Segment}"><Style.Triggers>
+                                            <DataTrigger Binding="{Binding Agents.Settings.Store.Glass}" Value="1"><Setter Property="Tag" Value="selected"/></DataTrigger>
+                                        </Style.Triggers></Style></Button.Style>
+                                    </Button>
+                                    <Button Content="Frosted" Command="{Binding Agents.Settings.SetGlass}" CommandParameter="2">
+                                        <Button.Style><Style TargetType="Button" BasedOn="{StaticResource Segment}"><Style.Triggers>
+                                            <DataTrigger Binding="{Binding Agents.Settings.Store.Glass}" Value="2"><Setter Property="Tag" Value="selected"/></DataTrigger>
+                                        </Style.Triggers></Style></Button.Style>
+                                    </Button>
+                                    <Button Content="Dark" Command="{Binding Agents.Settings.SetGlass}" CommandParameter="3">
+                                        <Button.Style><Style TargetType="Button" BasedOn="{StaticResource Segment}"><Style.Triggers>
+                                            <DataTrigger Binding="{Binding Agents.Settings.Store.Glass}" Value="3"><Setter Property="Tag" Value="selected"/></DataTrigger>
+                                        </Style.Triggers></Style></Button.Style>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
                         <Button Style="{StaticResource LinkBtn}" HorizontalAlignment="Right" VerticalAlignment="Center" Command="{Binding Agents.Settings.NextHotkey}" ToolTip="Tap to change the key that opens the island">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="Open with " FontFamily="{StaticResource Inter}" FontSize="11" VerticalAlignment="Center"/>
+                                <TextBlock Text="Key " FontFamily="{StaticResource Inter}" FontSize="11" VerticalAlignment="Center"/>
                                 <Border CornerRadius="6" Background="#26FFFFFF" Padding="7,2"><TextBlock Text="{Binding Agents.Settings.Store.Hotkey}" Foreground="White" FontFamily="{StaticResource InterSemiBold}" FontSize="10.5"/></Border>
                             </StackPanel>
                         </Button>
@@ -917,8 +1105,8 @@
               </Grid>
 
               <!-- Footer: four buttons and nothing else. Each one switches the whole expanded island to that view. -->
-              <Grid VerticalAlignment="Bottom" Height="40">
-                <Rectangle VerticalAlignment="Top" Height="1" Fill="#1EFFFFFF" Margin="18,0,18,0" IsHitTestVisible="False"/>
+              <Grid Grid.Row="1">
+                <Rectangle VerticalAlignment="Top" Height="1" Fill="#18FFFFFF" Margin="18,0,18,0" IsHitTestVisible="False"/>
                 <ItemsControl ItemsSource="{Binding Agents.Items}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,3,0,0">
                     <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
@@ -933,7 +1121,8 @@
                                         </Style>
                                     </Grid.Style>
                                     <TextBlock Text="{Binding Glyph}" FontFamily="{Binding GlyphFont}" Foreground="White" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                               Visibility="{Binding NoIcon, Converter={StaticResource BoolToVis}}"/>
+                                               Visibility="{Binding ShowGlyph, Converter={StaticResource BoolToVis}}"/>
+                                    <Path Data="{Binding Logo}" Fill="White" Stretch="Uniform" Width="17" Height="17"/>
                                     <Image Source="{Binding Icon}" Width="18" Height="18" RenderOptions.BitmapScalingMode="HighQuality"
                                            Visibility="{Binding HasIcon, Converter={StaticResource BoolToVis}}"/>
                                     <!-- status dot: pulses while this one is playing / answering -->
@@ -964,17 +1153,7 @@
                 </ItemsControl>
               </Grid>
             </Grid>
+            </Canvas>
         </Grid>
-        <!-- Rim light traces the same animated shape: bright toward the light, soft away from it -->
-        <Path Data="{Binding Clip, ElementName=Glass}" StrokeThickness="1.2" Fill="Transparent" IsHitTestVisible="False">
-            <Path.Stroke>
-                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                    <GradientStop Color="#30FFFFFF" Offset="0"/>
-                    <GradientStop Color="#0EFFFFFF" Offset="0.45"/>
-                    <GradientStop Color="#0EFFFFFF" Offset="0.6"/>
-                    <GradientStop Color="#24FFFFFF" Offset="1"/>
-                </LinearGradientBrush>
-            </Path.Stroke>
-        </Path>
     </Grid>
 </Window>

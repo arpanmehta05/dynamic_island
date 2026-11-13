@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using DynamicIsland.Core;
@@ -15,16 +16,20 @@ namespace DynamicIsland;
 public partial class IslandWindow : Window
 {
     // A layered window repaints its whole surface every frame, so the window is only as tall as it needs to be:
-    // just the notch (plus room for the spring and the droplet) when collapsed, the full player + footer when expanded.
-    const double CollapsedHeight = 70, ExpandedHeight = 170;
+    // just the pill (plus its shadow) when collapsed; when open, the content's own height (a question from Claude can be tall).
+    const double CollapsedHeight = 70, TallestHeight = 456, Gap = 6, Side = 20, ShadowRoom = 30;
+    static readonly Rect Pill = new(130, Gap, 180, 32);
+    static readonly SpringEase OpenSpring = new() { Damping = 0.72, Frequency = 13 }, CloseSpring = new() { Damping = 0.88, Frequency = 12 };
 
     readonly MediaModule _media = new();
     readonly AgentsHub _agents;
+    readonly HudModule _hud = new();
     readonly DispatcherTimer _shrink = new() { Interval = TimeSpan.FromMilliseconds(900) }; // waits for the closing animation
     readonly DispatcherTimer _peek = new() { Interval = TimeSpan.FromSeconds(6) };
     Hotkey? _hotkey;
     TrayIcon? _tray;
     bool _open;
+    double _restHeight = CollapsedHeight;
     Backdrop? _backdrop;
     FullscreenWatcher? _fullscreen;
 
@@ -32,15 +37,17 @@ public partial class IslandWindow : Window
     {
         InitializeComponent();
         _agents = new AgentsHub(_media);
-        DataContext = new { Clock = new ClockModule(), Media = _media, Agents = _agents, Hud = new HudModule() };
-        _agents.TabChanged += () => ((Storyboard)Resources["TabSwitch"]).Begin(this);
-        _shrink.Tick += (_, _) => { _shrink.Stop(); Height = CollapsedHeight; };
+        DataContext = new { Clock = new ClockModule(), Media = _media, Agents = _agents, Hud = _hud };
+        _agents.TabChanged += () => { ((Storyboard)Resources["TabSwitch"]).Begin(this); Motion.BlurIn(MainBody, 10, 0.3); };
+        _shrink.Tick += (_, _) => { _shrink.Stop(); Height = _restHeight; };
+        Detail.SizeChanged += (_, _) => Fit(); // another view, or a longer question: the open island follows its content
 
         SourceInitialized += (_, _) =>
         {
             // DI_CAPTURABLE is only for taking screenshots of the island during development.
             WindowStyler.Apply(this, excludeFromCapture: Environment.GetEnvironmentVariable("DI_CAPTURABLE") is null);
-            _backdrop = new Backdrop(this, ExpandedHeight);
+            _backdrop = new Backdrop(this, TallestHeight, SettingsStore.Current.Glass > 0, frozen: Environment.GetEnvironmentVariable("DI_CAPTURABLE") is not null);
+            SettingsStore.Current.PropertyChanged += (_, _) => { _backdrop.Frost = SettingsStore.Current.Glass > 0; _backdrop.Poke(); };
             BackdropImage.Source = _backdrop.Bitmap;
             _agents.ClipboardMonitor.Attach(HwndSource.FromHwnd(new WindowInteropHelper(this).Handle));
         };
@@ -89,21 +96,50 @@ public partial class IslandWindow : Window
         _shrink.Stop();
         if (_open) return;
         _open = true;
-        Height = ExpandedHeight;
-        if (_backdrop is not null) _backdrop.Expanded = true;
         _media.Tracking = true;
         _agents.IsExpanded = true;
+        Fit();
         ((Storyboard)Resources["Open"]).Begin(this);
+        Motion.BlurIn(Detail);
+    }
+
+    /// <summary>Sizes the open island (window, backdrop and glass) to its content.</summary>
+    void Fit()
+    {
+        if (!_open) return;
+        Detail.UpdateLayout();
+        var height = Gap + Detail.ActualHeight + ShadowRoom;
+        Resize(height);
+        _backdrop?.Expand(Math.Max(height, Height));
+        Morph(new Rect(Side, Gap, Detail.ActualWidth, Detail.ActualHeight), 28, OpenSpring, 0.7);
+    }
+
+    /// <summary>Growing happens at once (the glass needs the room now); shrinking waits until the glass has got there.</summary>
+    void Resize(double height)
+    {
+        _restHeight = height;
+        _shrink.Stop();
+        if (height >= Height) Height = height; else _shrink.Start();
+    }
+
+    void Morph(Rect to, double radius, IEasingFunction ease, double seconds)
+    {
+        var time = TimeSpan.FromSeconds(seconds);
+        Shape.BeginAnimation(RectangleGeometry.RectProperty, new RectAnimation(to, time) { EasingFunction = ease });
+        var corner = new DoubleAnimation(radius, time) { EasingFunction = (IEasingFunction)Resources["Smooth"] };
+        Shape.BeginAnimation(RectangleGeometry.RadiusXProperty, corner);
+        Shape.BeginAnimation(RectangleGeometry.RadiusYProperty, corner);
     }
 
     void Collapse()
     {
         if (!_open) return;
         _open = false;
-        _shrink.Start();
-        if (_backdrop is not null) _backdrop.Expanded = false;
+        Resize(CollapsedHeight);
+        _backdrop?.Collapse();
         _media.Tracking = false;
         _agents.IsExpanded = false;
+        Morph(Pill, 16, CloseSpring, 0.6);
         ((Storyboard)Resources["Close"]).Begin(this);
     }
 
@@ -126,6 +162,17 @@ public partial class IslandWindow : Window
         WindowStyler.AllowTyping(this, true);
         Dispatcher.BeginInvoke(() => Keyboard.Focus((IInputElement)sender), DispatcherPriority.Input);
     }
+
+    // The open island's volume bar: press or drag anywhere on it to set the volume
+    void Volume_Set(object sender, MouseEventArgs e)
+    {
+        var bar = (FrameworkElement)sender;
+        if (e.LeftButton != MouseButtonState.Pressed || !_hud.IsVolume) return;
+        bar.CaptureMouse();
+        _hud.SetVolume(e.GetPosition(bar).X / bar.ActualWidth);
+    }
+
+    void Volume_Release(object sender, MouseButtonEventArgs e) => ((UIElement)sender).ReleaseMouseCapture();
 
     void Track_MouseDown(object sender, MouseButtonEventArgs e)
     {

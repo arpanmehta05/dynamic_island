@@ -10,11 +10,14 @@ public enum PetState { Sleeping, Idle, Working }
 /// One AI assistant. Subclasses read whatever the app leaves on disk and fill in
 /// <see cref="TabEntry.IsWorking"/>, <see cref="Headline"/>, <see cref="Body"/> and <see cref="Meta"/>.
 /// Its footer button only shows while its window is open on the desktop or it is busy: an app that just sits in the tray stays out of the way.
+/// Assistants that live inside another app (<see cref="OnlyWhileChatting"/>) show only while a chat is going, and for a short while after.
 /// </summary>
 abstract class AgentInfo : TabEntry
 {
     string _headline = "", _body = "", _meta = "";
-    bool _hasWindow;
+    bool _hasWindow, _chatting;
+    DateTime _lastWork;
+    static readonly TimeSpan ChatLinger = TimeSpan.FromMinutes(2);
 
     /// <summary>Click on the assistant's view: bring its window to the front (or start it again if it is only in the tray).</summary>
     public ICommand Open { get; }
@@ -38,7 +41,9 @@ abstract class AgentInfo : TabEntry
 
     /// <summary>The app has a visible window on the desktop (not just a tray icon).</summary>
     public bool HasWindow { get => _hasWindow; private set { if (Set(ref _hasWindow, value)) Raise(nameof(IsAvailable)); } }
-    public override bool IsAvailable => ShowAll || HasWindow || IsWorking;
+    public override bool IsAvailable => ShowAll || IsWorking || (OnlyWhileChatting ? _chatting : HasWindow);
+    /// <summary>True for Copilot and ChatGPT: an open VS Code or ChatGPT window with no chat running is not worth a button.</summary>
+    protected virtual bool OnlyWhileChatting => false;
 
     /// <summary>Development only: DI_SHOW_ALL=1 shows every assistant's button even when its app isn't open (to look at all the views).</summary>
     static readonly bool ShowAll = Environment.GetEnvironmentVariable("DI_SHOW_ALL") is not null;
@@ -64,8 +69,12 @@ abstract class AgentInfo : TabEntry
         Pids = pids;
         IsRunning = pids.Count > 0;
         HasWindow = pids.Any(windowPids.Contains);
-        if (Icon is null && IsRunning) Icon = SourceApp.Icon(ProcessNames[0]);
+        if (Icon is null && Logo is null && IsRunning) Icon = SourceApp.Icon(ProcessNames[0]);
         Update(detailed);
+
+        if (IsWorking) _lastWork = DateTime.UtcNow;
+        var chatting = DateTime.UtcNow - _lastWork < ChatLinger;
+        if (chatting != _chatting) { _chatting = chatting; Raise(nameof(IsAvailable)); }
     }
 
     protected abstract void Update(bool detailed);

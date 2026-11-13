@@ -10,6 +10,7 @@ class ClockModule : INotifyPropertyChanged
 
     public string Time => DateTime.Now.ToString("h:mm tt");
     public string Date => DateTime.Now.ToString("dddd, d MMMM");
+    public string Greeting => DateTime.Now.Hour switch { < 5 => "Up late", < 12 => "Good morning", < 17 => "Good afternoon", < 22 => "Good evening", _ => "Good night" };
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public ClockModule()

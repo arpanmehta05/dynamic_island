@@ -59,6 +59,8 @@ class AgentsHub : INotifyPropertyChanged
     public AgentInfo? CompactAgent { get; private set; }
     public bool ShowCompactAgent => !_media.IsPlaying && CompactAgent is not null;
     public bool ShowCover => _media.HasMedia && !ShowCompactAgent;
+    /// <summary>Nothing playing and no assistant working: the island's own avatar sits beside the time.</summary>
+    public bool ShowAvatar => !ShowCover && !ShowCompactAgent;
 
     public event PropertyChangedEventHandler? PropertyChanged;
     /// <summary>Raised when the user picks a different button (the window plays a small switch animation).</summary>
@@ -90,7 +92,7 @@ class AgentsHub : INotifyPropertyChanged
             a.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(TabEntry.IsWorking)) UpdateCompact(); };
         media.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName is nameof(MediaModule.IsPlaying) or nameof(MediaModule.HasMedia)) Raise(nameof(ShowCompactAgent), nameof(ShowCover));
+            if (e.PropertyName is nameof(MediaModule.IsPlaying) or nameof(MediaModule.HasMedia)) Raise(nameof(ShowCompactAgent), nameof(ShowCover), nameof(ShowAvatar));
         };
 
         _timer.Tick += (_, _) => RefreshAll();
@@ -146,7 +148,7 @@ class AgentsHub : INotifyPropertyChanged
         var working = Items.OfType<AgentInfo>().FirstOrDefault(a => a.IsWorking);
         if (ReferenceEquals(working, CompactAgent)) return;
         CompactAgent = working;
-        Raise(nameof(CompactAgent), nameof(ShowCompactAgent), nameof(ShowCover));
+        Raise(nameof(CompactAgent), nameof(ShowCompactAgent), nameof(ShowCover), nameof(ShowAvatar));
     }
 
     void Raise(params string[] names)

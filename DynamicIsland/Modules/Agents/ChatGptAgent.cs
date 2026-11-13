@@ -35,6 +35,8 @@ sealed class ChatGptAgent : AgentInfo
     public override string Glyph => "◎"; // ◎, shown only when the app's own icon can't be read
     public override string Accent => "#10A37F";
     protected override string[] ProcessNames => ["chatgpt"];
+    public override System.Windows.Media.Geometry? Logo => Logos.OpenAI;
+    protected override bool OnlyWhileChatting => true;
     public override SpriteSet? Sprites => _sprites;
 
     public ChatGptAgent()

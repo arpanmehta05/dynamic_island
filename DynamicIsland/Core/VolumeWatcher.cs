@@ -83,6 +83,18 @@ sealed class VolumeWatcher : IDisposable
     readonly object _lock = new();
     IAudioEndpointVolume? _endpoint;
 
+    /// <summary>Sets the speaker volume (0..1) and unmutes. The change comes back through <see cref="Changed"/> like any other.</summary>
+    public void Set(float level)
+    {
+        lock (_lock)
+        {
+            if (_endpoint is null) return;
+            var none = Guid.Empty;
+            _endpoint.SetMasterVolumeLevelScalar(Math.Clamp(level, 0f, 1f), ref none);
+            if (level > 0) _endpoint.SetMute(false, ref none);
+        }
+    }
+
     /// <summary>Volume 0..1 and whether it is muted. Raised on a background thread.</summary>
     public event Action<float, bool>? Changed;
 

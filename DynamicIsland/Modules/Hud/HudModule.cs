@@ -17,13 +17,17 @@ sealed class HudModule : INotifyPropertyChanged
     readonly VolumeWatcher? _volume;
     readonly BrightnessWatcher _brightness;
     readonly PrivacyWatcher _privacy;
-    bool _showing, _mic, _camera;
+    bool _showing, _mic, _camera, _isVolume;
     string _glyph = "";
     double _level;
 
     public bool Showing { get => _showing; private set => Set(ref _showing, value); }
     public string Glyph { get => _glyph; private set => Set(ref _glyph, value); }
     public double BarWidth { get => _level * BarLength; }
+    /// <summary>0..1, for the bar that shows while the island is open.</summary>
+    public double Level => _level;
+    /// <summary>The bar being shown is the volume (the open island's bar can be dragged to change it; brightness can't).</summary>
+    public bool IsVolume { get => _isVolume; private set => Set(ref _isVolume, value); }
     public bool Microphone { get => _mic; private set => Set(ref _mic, value); }
     public bool Camera { get => _camera; private set => Set(ref _camera, value); }
 
@@ -36,12 +40,12 @@ sealed class HudModule : INotifyPropertyChanged
         try
         {
             _volume = new VolumeWatcher();
-            _volume.Changed += (level, muted) => OnUi(() => Show(muted ? "" : "", muted ? 0 : level));
+            _volume.Changed += (level, muted) => OnUi(() => Show(muted ? "" : "", muted ? 0 : level, true));
         }
         catch { /* no audio device: no volume pop-up */ }
 
         _brightness = new BrightnessWatcher();
-        _brightness.Changed += percent => OnUi(() => Show("", percent / 100.0));
+        _brightness.Changed += percent => OnUi(() => Show("", percent / 100.0, false));
 
         _privacy = new PrivacyWatcher();
         Microphone = _privacy.MicrophoneInUse;
@@ -49,11 +53,15 @@ sealed class HudModule : INotifyPropertyChanged
         _privacy.Changed += (mic, camera) => OnUi(() => { Microphone = mic; Camera = camera; });
     }
 
-    void Show(string glyph, double level)
+    public void SetVolume(double level) => _volume?.Set((float)level);
+
+    void Show(string glyph, double level, bool volume)
     {
         Glyph = glyph;
+        IsVolume = volume;
         _level = Math.Clamp(level, 0, 1);
         PropertyChanged?.Invoke(this, new(nameof(BarWidth)));
+        PropertyChanged?.Invoke(this, new(nameof(Level)));
         Showing = true;
         _hide.Stop();
         _hide.Start();

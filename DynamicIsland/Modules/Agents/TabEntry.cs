@@ -49,10 +49,13 @@ abstract class TabEntry : INotifyPropertyChanged
     public ImageSource? Icon
     {
         get => _icon;
-        protected set { if (Set(ref _icon, value)) { Raise(nameof(HasIcon)); Raise(nameof(NoIcon)); } }
+        protected set { if (Set(ref _icon, value)) { Raise(nameof(HasIcon)); Raise(nameof(NoIcon)); Raise(nameof(ShowGlyph)); } }
     }
     public bool HasIcon => _icon is not null;
     public bool NoIcon => _icon is null;
+    /// <summary>The assistant's own mark as an outline, used instead of the window icon when that icon isn't the assistant's (see <see cref="Core.Logos"/>).</summary>
+    public virtual Geometry? Logo => null;
+    public bool ShowGlyph => _icon is null && Logo is null;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

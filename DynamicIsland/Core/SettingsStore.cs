@@ -10,7 +10,7 @@ namespace DynamicIsland.Core;
 /// </summary>
 sealed class SettingsStore : INotifyPropertyChanged
 {
-    sealed record Data(double Tint = 1.0, string Hotkey = "Ctrl+Alt+I", string[]? HiddenTabs = null);
+    sealed record Data(double Tint = 0.6, string Hotkey = "Ctrl+Alt+I", string[]? HiddenTabs = null);
 
     public static readonly string[] HotkeyChoices = ["Ctrl+Alt+I", "Ctrl+Shift+Space", "Win+Alt+I", "Ctrl+Alt+Space"];
     static readonly string FilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DynamicIsland", "settings.json");
@@ -27,14 +27,21 @@ sealed class SettingsStore : INotifyPropertyChanged
         Data data;
         try { data = JsonSerializer.Deserialize<Data>(File.ReadAllText(FilePath)) ?? new Data(); }
         catch { data = new Data(); }
-        _tint = Math.Clamp(data.Tint, 0.3, 1.0);
+        _tint = Math.Clamp(data.Tint, 0, 1);
         _hotkey = data.Hotkey;
         _hidden = [.. data.HiddenTabs ?? []];
     }
 
-    /// <summary>How dark the glass is: 1 = the original smoked glass, lower = clearer.</summary>
-    public double Tint { get => _tint; set { value = Math.Round(Math.Clamp(value, 0.3, 1.0), 1); if (value == _tint) return; _tint = value; Changed(nameof(Tint), nameof(TintText)); } }
-    public string TintText => $"{Math.Round(_tint * 100)}%";
+    static readonly double[] GlassTints = [0, 0.3, 0.6, 1.0];
+
+    /// <summary>How dark the glass is (the shader's tint): 0 = liquid (almost nothing but the edges), 0.3 = clear, 0.6 = frosted, 1 = dark smoked glass.</summary>
+    public double Tint => _tint;
+    /// <summary>The same as a choice: 0 liquid, 1 clear, 2 frosted, 3 dark.</summary>
+    public int Glass
+    {
+        get => _tint < 0.15 ? 0 : _tint < 0.45 ? 1 : _tint < 0.8 ? 2 : 3;
+        set { if (value == Glass) return; _tint = GlassTints[Math.Clamp(value, 0, 3)]; Changed(nameof(Tint), nameof(Glass)); }
+    }
 
     public string Hotkey { get => _hotkey; set { if (value == _hotkey) return; _hotkey = value; Changed(nameof(Hotkey)); HotkeyChanged?.Invoke(); } }
 

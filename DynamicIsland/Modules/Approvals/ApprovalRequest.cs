@@ -21,19 +21,20 @@ abstract class Notifying : INotifyPropertyChanged
     }
 }
 
-/// <summary>One choice in a question. The description is shown as a tooltip.</summary>
+/// <summary>One choice in a question, with the short explanation shown under it.</summary>
 sealed class OptionItem(string label, string description) : Notifying
 {
     bool _selected;
     public string Label { get; } = label;
     public string Description { get; } = description;
+    public bool HasDescription => Description.Length > 0;
     public bool IsSelected { get => _selected; set => Set(ref _selected, value); }
 }
 
-/// <summary>The "Write my own…" chip at the end of the options.</summary>
+/// <summary>The "Something else…" row at the end of the options.</summary>
 sealed class OtherChip(QuestionItem question) { public QuestionItem Question { get; } = question; }
 
-/// <summary>The text field that opens next to the chips once "Write my own…" is chosen.</summary>
+/// <summary>The text field that opens under it once "Something else…" is chosen.</summary>
 sealed class OtherInput(QuestionItem question) { public QuestionItem Question { get; } = question; }
 
 /// <summary>One question with a few options (pick one, or several), plus an "Other" answer you type yourself.</summary>
@@ -44,8 +45,9 @@ sealed class QuestionItem : Notifying
 
     public required string Text { get; init; }
     public required bool Multi { get; init; }
+    public string Hint => Multi ? "Choose any that fit" : "Choose one";
     public required IReadOnlyList<OptionItem> Options { get; init; }
-    /// <summary>What the chip area shows, in order: the options, the "Write my own…" chip, then its text field (only visible when chosen).</summary>
+    /// <summary>What the answer list shows, in order: the options, the "Something else…" row, then its text field (only visible when chosen).</summary>
     public IReadOnlyList<object> Items => [.. Options, new OtherChip(this), new OtherInput(this)];
 
     public bool OtherOn { get => _otherOn; private set { if (Set(ref _otherOn, value)) Raise(nameof(CanAnswer)); } }

@@ -27,8 +27,7 @@ sealed class SettingsEntry : TabEntry
     public SettingsStore Store => SettingsStore.Current;
     public IReadOnlyList<TabToggle> Toggles { get; }
     public ICommand Toggle { get; }
-    public ICommand TintDown { get; }
-    public ICommand TintUp { get; }
+    public ICommand SetGlass { get; }
     public ICommand NextHotkey { get; }
 
     public SettingsEntry(IEnumerable<TabEntry> switchable)
@@ -44,8 +43,7 @@ sealed class SettingsEntry : TabEntry
             Store.SetHidden(t.Name, t.Entry.Hidden);
             t.Refresh();
         });
-        TintDown = new RelayCommand(() => Store.Tint -= 0.1);
-        TintUp = new RelayCommand(() => Store.Tint += 0.1);
+        SetGlass = new ParamCommand(p => Store.Glass = Convert.ToInt32(p));
         NextHotkey = new RelayCommand(() =>
         {
             var choices = SettingsStore.HotkeyChoices;

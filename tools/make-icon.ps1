@@ -1,4 +1,4 @@
-# Draws the app icon (a cute round black island with a face and a chat-dots bubble on a violet tile) and writes DynamicIsland\App.ico
+# Draws the app icon (the island's violet face on a dark glass tile) and writes DynamicIsland\App.ico
 Add-Type -AssemblyName System.Drawing
 
 function New-IconBitmap([int]$size) {
@@ -6,49 +6,53 @@ function New-IconBitmap([int]$size) {
     $g = [System.Drawing.Graphics]::FromImage($bmp)
     $g.SmoothingMode = 'AntiAlias'; $g.PixelOffsetMode = 'HighQuality'; $g.Clear([System.Drawing.Color]::Transparent)
     $k = $size / 256.0
+    function C([int]$a, [int]$r, [int]$gr, [int]$b) { [System.Drawing.Color]::FromArgb($a, $r, $gr, $b) }
+    function B([int]$a, [int]$r, [int]$gr, [int]$b) { New-Object System.Drawing.SolidBrush (C $a $r $gr $b) }
 
-    # tile: soft violet-to-blue
-    $r = 56 * $k
+    # tile: dark smoked glass, lighter at the top, with a thin lit edge
+    $r = 58 * $k
     $path = New-Object System.Drawing.Drawing2D.GraphicsPath
     $rect = New-Object System.Drawing.RectangleF 0, 0, $size, $size
     $d = 2 * $r
     $path.AddArc($rect.X, $rect.Y, $d, $d, 180, 90); $path.AddArc($rect.Right - $d, $rect.Y, $d, $d, 270, 90)
     $path.AddArc($rect.Right - $d, $rect.Bottom - $d, $d, $d, 0, 90); $path.AddArc($rect.X, $rect.Bottom - $d, $d, $d, 90, 90); $path.CloseFigure()
-    $tile = New-Object System.Drawing.Drawing2D.LinearGradientBrush $rect, ([System.Drawing.Color]::FromArgb(255, 132, 168, 255)), ([System.Drawing.Color]::FromArgb(255, 176, 118, 255)), 60
+    $tile = New-Object System.Drawing.Drawing2D.LinearGradientBrush $rect, (C 255 46 44 66), (C 255 12 12 20), 90
     $g.FillPath($tile, $path)
-
-    # the island: a round black body
-    $cx = 128 * $k; $cy = 134 * $k; $cr = 90 * $k
-    $body = New-Object System.Drawing.Drawing2D.GraphicsPath; $body.AddEllipse($cx - $cr, $cy - $cr, 2 * $cr, 2 * $cr)
-    $bb = New-Object System.Drawing.Drawing2D.PathGradientBrush $body
-    $bb.CenterColor = [System.Drawing.Color]::FromArgb(255, 44, 44, 56); $bb.SurroundColors = @([System.Drawing.Color]::FromArgb(255, 8, 8, 12))
-    $bb.CenterPoint = New-Object System.Drawing.PointF ($cx - 28 * $k), ($cy - 36 * $k)
-    $g.FillPath($bb, $body)
-
-    # three dots on top, like a chat "typing" bubble
-    $bub = New-Object System.Drawing.RectangleF (148 * $k), (22 * $k), (84 * $k), (38 * $k); $br = 19 * $k
-    $bp = New-Object System.Drawing.Drawing2D.GraphicsPath
-    $bp.AddArc($bub.X, $bub.Y, 2 * $br, 2 * $br, 90, 180); $bp.AddArc($bub.Right - 2 * $br, $bub.Y, 2 * $br, 2 * $br, 270, 180); $bp.CloseFigure()
-    $g.FillPath((New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(245, 255, 255, 255))), $bp)
-    foreach ($i in 0..2) {
-        $dx = (165 + 25 * $i) * $k; $dy = 41 * $k; $dr = 7 * $k
-        $g.FillEllipse((New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(255, 70 + 40 * $i, 70 + 40 * $i, 90 + 40 * $i))), $dx - $dr, $dy - $dr, 2 * $dr, 2 * $dr)
+    $g.SetClip($path)
+    # a violet glow rising behind the face
+    $glow = New-Object System.Drawing.Drawing2D.GraphicsPath; $glow.AddEllipse(-20 * $k, 60 * $k, 296 * $k, 296 * $k)
+    $gb = New-Object System.Drawing.Drawing2D.PathGradientBrush $glow
+    $gb.CenterColor = C 120 150 120 255; $gb.SurroundColors = @((C 0 150 120 255))
+    $g.FillPath($gb, $glow)
+    $g.ResetClip()
+    if ($size -ge 32) {
+        $edge = New-Object System.Drawing.Drawing2D.LinearGradientBrush $rect, (C 120 255 255 255), (C 20 255 255 255), 70
+        $g.DrawPath((New-Object System.Drawing.Pen $edge, ([Math]::Max(1, 3 * $k))), $path)
     }
 
-    # face: shiny eyes, rosy cheeks, a small smile
-    $white = [System.Drawing.Brushes]::White
+    # the island's face: a soft violet blob (the same character as Views\AvatarControl)
+    $cx = 128 * $k; $cy = 132 * $k; $cr = 92 * $k
+    $bodyRect = New-Object System.Drawing.RectangleF ($cx - $cr), ($cy - $cr), (2 * $cr), (2 * $cr)
+    $body = New-Object System.Drawing.Drawing2D.LinearGradientBrush $bodyRect, (C 255 166 196 255), (C 255 192 124 255), 60
+    $blend = New-Object System.Drawing.Drawing2D.ColorBlend 3
+    $blend.Colors = @((C 255 166 196 255), (C 255 154 140 255), (C 255 192 124 255)); $blend.Positions = @(0.0, 0.55, 1.0)
+    $body.InterpolationColors = $blend
+    $g.FillEllipse($body, $bodyRect)
+    # sheen on the forehead
+    $sheenRect = New-Object System.Drawing.RectangleF ($cx - 58 * $k), ($cy - 84 * $k), (104 * $k), (62 * $k)
+    $sheen = New-Object System.Drawing.Drawing2D.LinearGradientBrush $sheenRect, (C 95 255 255 255), (C 0 255 255 255), 90
+    $g.FillEllipse($sheen, $sheenRect)
+
+    # big eyes, rosy cheeks, a small smile
     foreach ($sx in -1, 1) {
-        $ex = $cx + $sx * 36 * $k; $ey = $cy - 6 * $k
-        $g.FillEllipse($white, $ex - 17 * $k, $ey - 24 * $k, 34 * $k, 48 * $k)
-        $g.FillEllipse((New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(255, 20, 20, 30))), $ex - 10 * $k, $ey - 6 * $k, 20 * $k, 28 * $k)
-        $g.FillEllipse($white, $ex - 6 * $k, $ey - 3 * $k, 8 * $k, 8 * $k)
-        $g.FillEllipse((New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(110, 255, 120, 160))), $cx + $sx * 66 * $k - 14 * $k, $cy + 28 * $k, 28 * $k, 17 * $k)
+        $ex = $cx + $sx * 29 * $k; $ey = $cy - 6 * $k
+        $g.FillEllipse((B 255 255 255 255), $ex - 20 * $k, $ey - 27 * $k, 40 * $k, 55 * $k)
+        $g.FillEllipse((B 255 28 24 48), $ex - 12 * $k, $ey - 10 * $k, 24 * $k, 33 * $k)
+        $g.FillEllipse((B 255 255 255 255), $ex - 8 * $k, $ey - 6 * $k, 10 * $k, 10 * $k)
+        $g.FillEllipse((B 180 255 141 181), $cx + $sx * 64 * $k - 15 * $k, $cy + 22 * $k, 30 * $k, 18 * $k)
     }
-    $pen = New-Object System.Drawing.Pen ([System.Drawing.Color]::White), ([Math]::Max(1.2, 9 * $k)); $pen.StartCap = 'Round'; $pen.EndCap = 'Round'
-    $g.DrawArc($pen, $cx - 22 * $k, $cy + 14 * $k, 44 * $k, 30 * $k, 25, 130)
-    # soft highlight along the top edge of the tile
-    $hi = New-Object System.Drawing.Drawing2D.LinearGradientBrush (New-Object System.Drawing.RectangleF 0, 0, $size, ($size * 0.5)), ([System.Drawing.Color]::FromArgb(46, 255, 255, 255)), ([System.Drawing.Color]::FromArgb(0, 255, 255, 255)), 90
-    $g.SetClip($path); $g.FillRectangle($hi, 0, 0, $size, $size * 0.5); $g.ResetClip()
+    $pen = New-Object System.Drawing.Pen (C 255 43 36 82), ([Math]::Max(1.2, 8 * $k)); $pen.StartCap = 'Round'; $pen.EndCap = 'Round'
+    $g.DrawArc($pen, $cx - 18 * $k, $cy + 20 * $k, 36 * $k, 24 * $k, 20, 140)
     $g.Dispose(); $bmp
 }
 

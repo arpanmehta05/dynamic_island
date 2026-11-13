@@ -21,8 +21,10 @@ sealed partial class CopilotAgent : AgentInfo
     public override string Name => "Copilot";
     public override string Glyph => "\uE943"; // Segoe Fluent Icons: code (</>)
     public override string GlyphFont => "Segoe Fluent Icons, Segoe MDL2 Assets";
-    public override string Accent => "#4C9BFF";
+    public override string Accent => "#8B7CFF";
     protected override string[] ProcessNames => ["code"];
+    public override System.Windows.Media.Geometry? Logo => Core.Logos.Copilot;
+    protected override bool OnlyWhileChatting => true;
 
     public CopilotAgent()
     {
