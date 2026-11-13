@@ -26,7 +26,7 @@ public partial class IslandWindow : Window
     readonly HudModule _hud = new();
     readonly DispatcherTimer _shrink = new() { Interval = TimeSpan.FromMilliseconds(900) }; // waits for the closing animation
     readonly DispatcherTimer _peek = new() { Interval = TimeSpan.FromSeconds(6) };
-    readonly DispatcherTimer _reset = new() { Interval = TimeSpan.FromMilliseconds(900) }; // after the closing animation
+    readonly DispatcherTimer _reset = new() { Interval = TimeSpan.FromMilliseconds(220) }; // once the content has faded out
     Hotkey? _hotkey;
     TrayIcon? _tray;
     bool _open;
@@ -42,7 +42,7 @@ public partial class IslandWindow : Window
         DataContext = new { Clock = new ClockModule(), Media = _media, Agents = _agents, Hud = _hud };
         _agents.TabChanged += direction => Motion.SlideIn(MainBody, direction);
         _shrink.Tick += (_, _) => { _shrink.Stop(); Height = _restHeight; };
-        _reset.Tick += (_, _) => { _reset.Stop(); _agents.ResetTab(); };
+        _reset.Tick += (_, _) => { _reset.Stop(); if (!_open) _agents.ResetTab(); };
         Detail.SizeChanged += (_, _) => Fit(); // another view, or a longer question: the open island follows its content
 
         SourceInitialized += (_, _) =>
