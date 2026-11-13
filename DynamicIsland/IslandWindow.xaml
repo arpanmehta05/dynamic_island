@@ -303,6 +303,40 @@
             <DoubleAnimation Storyboard.TargetProperty="RenderTransform.X" From="28" To="0" Duration="0:0:0.55" EasingFunction="{StaticResource Spring}"/>
         </Storyboard>
 
+        <!-- Main transport button (play / pause): a solid white disc with a dark glyph; squeezes on press -->
+        <Style x:Key="PlayBtn" TargetType="Button">
+            <Setter Property="Foreground" Value="#141418"/>
+            <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets"/>
+            <Setter Property="FontSize" Value="17"/>
+            <Setter Property="Width" Value="42"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid Background="Transparent" RenderTransformOrigin="0.5,0.5">
+                            <Grid.RenderTransform><ScaleTransform x:Name="Squeeze"/></Grid.RenderTransform>
+                            <Ellipse Width="36" Height="36" Fill="#F5FFFFFF"/>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Trigger.EnterActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Squeeze" Storyboard.TargetProperty="ScaleX" To="0.9" Duration="0:0:0.08"/>
+                                    <DoubleAnimation Storyboard.TargetName="Squeeze" Storyboard.TargetProperty="ScaleY" To="0.9" Duration="0:0:0.08"/>
+                                </Storyboard></BeginStoryboard></Trigger.EnterActions>
+                                <Trigger.ExitActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Squeeze" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.45" EasingFunction="{StaticResource Spring}"/>
+                                    <DoubleAnimation Storyboard.TargetName="Squeeze" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.45" EasingFunction="{StaticResource Spring}"/>
+                                </Storyboard></BeginStoryboard></Trigger.ExitActions>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- Flat round transport button: the soft circle shows only while it is pressed, then fades away -->
         <Style x:Key="Ctl" TargetType="Button">
             <Setter Property="Foreground" Value="White"/>
@@ -516,37 +550,9 @@
                            FontFamily="{StaticResource InterSemiBold}" FontSize="14"
                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-                <!-- Equalizer: only exists (and animates, at a low frame rate) while something is playing -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Height="14" Margin="0,0,12,0" HorizontalAlignment="Right" VerticalAlignment="Center"
-                            Visibility="{Binding Media.IsPlaying, Converter={StaticResource BoolToVis}}">
-                    <Rectangle Width="3" Height="14" RadiusX="1.5" RadiusY="1.5" Fill="White" Margin="0,0,2,0" VerticalAlignment="Bottom" RenderTransformOrigin="0.5,1">
-                        <Rectangle.RenderTransform><ScaleTransform ScaleY="0.4"/></Rectangle.RenderTransform>
-                        <Rectangle.Style><Style TargetType="Rectangle"><Style.Triggers><DataTrigger Binding="{Binding Media.IsPlaying}" Value="True">
-                            <DataTrigger.EnterActions><BeginStoryboard x:Name="Eq"><Storyboard Timeline.DesiredFrameRate="8">
-                                <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleY" From="0.25" To="1" Duration="0:0:0.45" AutoReverse="True" RepeatBehavior="Forever"/>
-                            </Storyboard></BeginStoryboard></DataTrigger.EnterActions>
-                            <DataTrigger.ExitActions><StopStoryboard BeginStoryboardName="Eq"/></DataTrigger.ExitActions>
-                        </DataTrigger></Style.Triggers></Style></Rectangle.Style>
-                    </Rectangle>
-                    <Rectangle Width="3" Height="14" RadiusX="1.5" RadiusY="1.5" Fill="White" Margin="0,0,2,0" VerticalAlignment="Bottom" RenderTransformOrigin="0.5,1">
-                        <Rectangle.RenderTransform><ScaleTransform ScaleY="0.7"/></Rectangle.RenderTransform>
-                        <Rectangle.Style><Style TargetType="Rectangle"><Style.Triggers><DataTrigger Binding="{Binding Media.IsPlaying}" Value="True">
-                            <DataTrigger.EnterActions><BeginStoryboard x:Name="Eq"><Storyboard Timeline.DesiredFrameRate="8">
-                                <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleY" From="1" To="0.3" Duration="0:0:0.6" AutoReverse="True" RepeatBehavior="Forever"/>
-                            </Storyboard></BeginStoryboard></DataTrigger.EnterActions>
-                            <DataTrigger.ExitActions><StopStoryboard BeginStoryboardName="Eq"/></DataTrigger.ExitActions>
-                        </DataTrigger></Style.Triggers></Style></Rectangle.Style>
-                    </Rectangle>
-                    <Rectangle Width="3" Height="14" RadiusX="1.5" RadiusY="1.5" Fill="White" VerticalAlignment="Bottom" RenderTransformOrigin="0.5,1">
-                        <Rectangle.RenderTransform><ScaleTransform ScaleY="0.5"/></Rectangle.RenderTransform>
-                        <Rectangle.Style><Style TargetType="Rectangle"><Style.Triggers><DataTrigger Binding="{Binding Media.IsPlaying}" Value="True">
-                            <DataTrigger.EnterActions><BeginStoryboard x:Name="Eq"><Storyboard Timeline.DesiredFrameRate="8">
-                                <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleY" From="0.35" To="0.95" Duration="0:0:0.5" AutoReverse="True" RepeatBehavior="Forever"/>
-                            </Storyboard></BeginStoryboard></DataTrigger.EnterActions>
-                            <DataTrigger.ExitActions><StopStoryboard BeginStoryboardName="Eq"/></DataTrigger.ExitActions>
-                        </DataTrigger></Style.Triggers></Style></Rectangle.Style>
-                    </Rectangle>
-                </StackPanel>
+                <!-- Equalizer: five soft bars that dance only while something is playing -->
+                <views:EqualizerControl Grid.Column="2" Margin="0,0,13,0" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        Active="{Binding Media.IsPlaying}" Visibility="{Binding Media.IsPlaying, Converter={StaticResource BoolToVis}}"/>
                 <!-- Working indicator for the notch: three dots that light up in turn (animates only while shown) -->
                 <views:DotsControl Grid.Column="2" Margin="0,0,11,0" HorizontalAlignment="Right" VerticalAlignment="Center"
                                    Fill="{Binding Agents.CompactAgent.Accent}" Active="{Binding Agents.ShowCompactAgent}"
@@ -641,14 +647,27 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="{Binding Media.Elapsed}" Foreground="#99FFFFFF" FontFamily="{StaticResource Inter}" FontSize="10" VerticalAlignment="Center" MinWidth="26"/>
-                            <Grid Grid.Column="1" Margin="8,0" Background="Transparent" Cursor="Hand" MouseLeftButtonDown="Track_MouseDown">
-                                <Rectangle Height="5" RadiusX="2.5" RadiusY="2.5" Fill="#33FFFFFF" IsHitTestVisible="False"/>
-                                <Rectangle Height="5" RadiusX="2.5" RadiusY="2.5" Fill="White" HorizontalAlignment="Stretch" IsHitTestVisible="False" RenderTransformOrigin="0,0.5">
-                                    <Rectangle.RenderTransform><ScaleTransform ScaleX="{Binding Media.Progress}"/></Rectangle.RenderTransform>
-                                </Rectangle>
+                            <TextBlock Text="{Binding Media.Elapsed}" Foreground="#B3FFFFFF" FontFamily="{StaticResource Inter}" FontSize="10.5" VerticalAlignment="Center" MinWidth="28"/>
+                            <!-- the bar thickens under the pointer; press or drag to seek -->
+                            <Grid Grid.Column="1" Margin="8,0" Background="Transparent" Cursor="Hand"
+                                  MouseLeftButtonDown="Track_MouseDown" MouseMove="Track_MouseMove" MouseLeftButtonUp="Track_MouseUp">
+                                <Grid.Triggers>
+                                    <EventTrigger RoutedEvent="MouseEnter"><BeginStoryboard><Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="BarGrow" Storyboard.TargetProperty="ScaleY" To="1.6" Duration="0:0:0.4" EasingFunction="{StaticResource Spring}"/>
+                                    </Storyboard></BeginStoryboard></EventTrigger>
+                                    <EventTrigger RoutedEvent="MouseLeave"><BeginStoryboard><Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="BarGrow" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.25" EasingFunction="{StaticResource Smooth}"/>
+                                    </Storyboard></BeginStoryboard></EventTrigger>
+                                </Grid.Triggers>
+                                <Grid VerticalAlignment="Center" IsHitTestVisible="False" RenderTransformOrigin="0.5,0.5">
+                                    <Grid.RenderTransform><ScaleTransform x:Name="BarGrow"/></Grid.RenderTransform>
+                                    <Rectangle Height="5" RadiusX="2.5" RadiusY="2.5" Fill="#2EFFFFFF"/>
+                                    <Rectangle Height="5" RadiusX="2.5" RadiusY="2.5" Fill="White" HorizontalAlignment="Stretch" RenderTransformOrigin="0,0.5">
+                                        <Rectangle.RenderTransform><ScaleTransform ScaleX="{Binding Media.Progress}"/></Rectangle.RenderTransform>
+                                    </Rectangle>
+                                </Grid>
                             </Grid>
-                            <TextBlock Grid.Column="2" Text="{Binding Media.Total}" Foreground="#99FFFFFF" FontFamily="{StaticResource Inter}" FontSize="10" VerticalAlignment="Center" MinWidth="26" TextAlignment="Right"/>
+                            <TextBlock Grid.Column="2" Text="{Binding Media.Total}" Foreground="#B3FFFFFF" FontFamily="{StaticResource Inter}" FontSize="10.5" VerticalAlignment="Center" MinWidth="28" TextAlignment="Right"/>
                         </Grid>
 
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,0">
@@ -664,7 +683,7 @@
                                     <TextBlock Text="10" Foreground="White" FontFamily="{StaticResource InterSemiBold}" FontSize="8.5" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0.5,0,0"/>
                                 </Grid>                            </Button>
                             <Button Style="{StaticResource Ctl}" Content="&#xE892;" Command="{Binding Media.Previous}" Width="36"/>
-                            <Button Style="{StaticResource Ctl}" Content="{Binding Media.PlayGlyph}" Command="{Binding Media.PlayPause}" FontSize="22" Margin="4,0"/>
+                            <Button Style="{StaticResource PlayBtn}" Content="{Binding Media.PlayGlyph}" Command="{Binding Media.PlayPause}" Margin="6,0"/>
                             <Button Style="{StaticResource Ctl}" Content="&#xE893;" Command="{Binding Media.Next}" Width="36"/>
                             <Button Style="{StaticResource Ctl}" Command="{Binding Media.Forward10}" Width="34"
                                     Visibility="{Binding Media.IsLong, Converter={StaticResource BoolToVis}}">

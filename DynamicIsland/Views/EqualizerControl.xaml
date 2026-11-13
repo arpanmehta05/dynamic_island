@@ -1,0 +1,24 @@
+<UserControl x:Class="DynamicIsland.Views.EqualizerControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Width="22" Height="16" UseLayoutRounding="False">
+
+    <UserControl.Resources>
+        <!-- Five bars on their own slow rhythms, so the pattern never repeats in step. 15 fps is plenty for something this small. -->
+        <Storyboard x:Key="Dance" Timeline.DesiredFrameRate="15">
+            <DoubleAnimation Storyboard.TargetName="S1" Storyboard.TargetProperty="ScaleY" From="0.30" To="0.85" Duration="0:0:0.46" AutoReverse="True" RepeatBehavior="Forever"><DoubleAnimation.EasingFunction><SineEase EasingMode="EaseInOut"/></DoubleAnimation.EasingFunction></DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="S2" Storyboard.TargetProperty="ScaleY" From="0.95" To="0.35" Duration="0:0:0.62" AutoReverse="True" RepeatBehavior="Forever"><DoubleAnimation.EasingFunction><SineEase EasingMode="EaseInOut"/></DoubleAnimation.EasingFunction></DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="S3" Storyboard.TargetProperty="ScaleY" From="0.40" To="1.00" Duration="0:0:0.53" AutoReverse="True" RepeatBehavior="Forever"><DoubleAnimation.EasingFunction><SineEase EasingMode="EaseInOut"/></DoubleAnimation.EasingFunction></DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="S4" Storyboard.TargetProperty="ScaleY" From="0.80" To="0.30" Duration="0:0:0.41" AutoReverse="True" RepeatBehavior="Forever"><DoubleAnimation.EasingFunction><SineEase EasingMode="EaseInOut"/></DoubleAnimation.EasingFunction></DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="S5" Storyboard.TargetProperty="ScaleY" From="0.35" To="0.75" Duration="0:0:0.57" AutoReverse="True" RepeatBehavior="Forever"><DoubleAnimation.EasingFunction><SineEase EasingMode="EaseInOut"/></DoubleAnimation.EasingFunction></DoubleAnimation>
+        </Storyboard>
+    </UserControl.Resources>
+
+    <UniformGrid Rows="1" Columns="5">
+        <Rectangle Width="2.6" Height="16" RadiusX="1.3" RadiusY="1.3" VerticalAlignment="Bottom" RenderTransformOrigin="0.5,1" Fill="{Binding Fill, RelativeSource={RelativeSource AncestorType=UserControl}}" Opacity="0.7"><Rectangle.RenderTransform><ScaleTransform x:Name="S1" ScaleY="0.3"/></Rectangle.RenderTransform></Rectangle>
+        <Rectangle Width="2.6" Height="16" RadiusX="1.3" RadiusY="1.3" VerticalAlignment="Bottom" RenderTransformOrigin="0.5,1" Fill="{Binding Fill, RelativeSource={RelativeSource AncestorType=UserControl}}" Opacity="0.85"><Rectangle.RenderTransform><ScaleTransform x:Name="S2" ScaleY="0.6"/></Rectangle.RenderTransform></Rectangle>
+        <Rectangle Width="2.6" Height="16" RadiusX="1.3" RadiusY="1.3" VerticalAlignment="Bottom" RenderTransformOrigin="0.5,1" Fill="{Binding Fill, RelativeSource={RelativeSource AncestorType=UserControl}}"><Rectangle.RenderTransform><ScaleTransform x:Name="S3" ScaleY="0.5"/></Rectangle.RenderTransform></Rectangle>
+        <Rectangle Width="2.6" Height="16" RadiusX="1.3" RadiusY="1.3" VerticalAlignment="Bottom" RenderTransformOrigin="0.5,1" Fill="{Binding Fill, RelativeSource={RelativeSource AncestorType=UserControl}}" Opacity="0.85"><Rectangle.RenderTransform><ScaleTransform x:Name="S4" ScaleY="0.5"/></Rectangle.RenderTransform></Rectangle>
+        <Rectangle Width="2.6" Height="16" RadiusX="1.3" RadiusY="1.3" VerticalAlignment="Bottom" RenderTransformOrigin="0.5,1" Fill="{Binding Fill, RelativeSource={RelativeSource AncestorType=UserControl}}" Opacity="0.7"><Rectangle.RenderTransform><ScaleTransform x:Name="S5" ScaleY="0.4"/></Rectangle.RenderTransform></Rectangle>
+    </UniformGrid>
+</UserControl>

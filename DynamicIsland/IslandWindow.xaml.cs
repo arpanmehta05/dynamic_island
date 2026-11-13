@@ -26,6 +26,7 @@ public partial class IslandWindow : Window
     readonly HudModule _hud = new();
     readonly DispatcherTimer _shrink = new() { Interval = TimeSpan.FromMilliseconds(900) }; // waits for the closing animation
     readonly DispatcherTimer _peek = new() { Interval = TimeSpan.FromSeconds(6) };
+    readonly DispatcherTimer _reset = new() { Interval = TimeSpan.FromMilliseconds(900) }; // after the closing animation
     Hotkey? _hotkey;
     TrayIcon? _tray;
     bool _open;
@@ -41,6 +42,7 @@ public partial class IslandWindow : Window
         DataContext = new { Clock = new ClockModule(), Media = _media, Agents = _agents, Hud = _hud };
         _agents.TabChanged += () => { ((Storyboard)Resources["TabSwitch"]).Begin(this); Motion.BlurIn(MainBody, 10, 0.3); };
         _shrink.Tick += (_, _) => { _shrink.Stop(); Height = _restHeight; };
+        _reset.Tick += (_, _) => { _reset.Stop(); _agents.ResetTab(); };
         Detail.SizeChanged += (_, _) => Fit(); // another view, or a longer question: the open island follows its content
 
         SourceInitialized += (_, _) =>
@@ -51,6 +53,8 @@ public partial class IslandWindow : Window
             SettingsStore.Current.PropertyChanged += (_, _) => { _backdrop.Frost = SettingsStore.Current.Glass > 0; _backdrop.Poke(); };
             BackdropImage.Source = _backdrop.Bitmap;
             _agents.ClipboardMonitor.Attach(HwndSource.FromHwnd(new WindowInteropHelper(this).Handle));
+            var swipe = new SwipeGesture(HwndSource.FromHwnd(new WindowInteropHelper(this).Handle));
+            swipe.Swiped += direction => { if (_open) _agents.Step(direction); };
         };
 
         MouseEnter += (_, _) => { _peek.Stop(); Expand(); };
@@ -100,6 +104,7 @@ public partial class IslandWindow : Window
     void Expand()
     {
         _shrink.Stop();
+        _reset.Stop();
         if (_open) return;
         _open = true;
         _media.Tracking = true;
@@ -141,6 +146,7 @@ public partial class IslandWindow : Window
     {
         if (!_open) return;
         _open = false;
+        _reset.Start();
         Resize(CollapsedHeight);
         _backdrop?.Collapse();
         _media.Tracking = false;
@@ -189,10 +195,30 @@ public partial class IslandWindow : Window
 
     void Volume_Release(object sender, MouseButtonEventArgs e) => ((UIElement)sender).ReleaseMouseCapture();
 
+    DateTime _scrubbed;
+
+    // Press or drag along the progress bar to seek (a drag sends a new position at most every 120 ms)
     void Track_MouseDown(object sender, MouseButtonEventArgs e)
     {
         var track = (FrameworkElement)sender;
+        track.CaptureMouse();
+        _scrubbed = DateTime.UtcNow;
         _media.Seek(e.GetPosition(track).X / track.ActualWidth);
+    }
+
+    void Track_MouseMove(object sender, MouseEventArgs e)
+    {
+        var track = (FrameworkElement)sender;
+        if (!track.IsMouseCaptured || DateTime.UtcNow - _scrubbed < TimeSpan.FromMilliseconds(120)) return;
+        _scrubbed = DateTime.UtcNow;
+        _media.Seek(Math.Clamp(e.GetPosition(track).X / track.ActualWidth, 0, 1));
+    }
+
+    void Track_MouseUp(object sender, MouseButtonEventArgs e)
+    {
+        var track = (FrameworkElement)sender;
+        if (track.IsMouseCaptured) _media.Seek(Math.Clamp(e.GetPosition(track).X / track.ActualWidth, 0, 1));
+        track.ReleaseMouseCapture();
     }
 
     // ---- screenshots: drag a card out of the island and drop it anywhere (Claude, WhatsApp, Explorer, a browser...) ----

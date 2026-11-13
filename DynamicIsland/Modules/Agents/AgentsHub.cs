@@ -112,6 +112,23 @@ class AgentsHub : INotifyPropertyChanged
         TabChanged?.Invoke();
     }
 
+    /// <summary>A swipe: moves to the next (+1) or previous (-1) footer button. Not while Claude is waiting for an answer.</summary>
+    public void Step(int direction)
+    {
+        if (NeedsAttention) return;
+        var shown = Items.Where(t => t.Shown).Select(t => t.Index).ToList();
+        if (shown.Count == 0) return;
+        var at = Math.Max(0, shown.IndexOf(_index));
+        SelectIndex(shown[Math.Clamp(at + direction, 0, shown.Count - 1)]);
+    }
+
+    /// <summary>The island was closed: next time it opens on its first button, not wherever you left it.</summary>
+    public void ResetTab()
+    {
+        if (NeedsAttention) return;
+        if (Items.FirstOrDefault(t => t.Shown) is { } first) SelectIndex(first.Index);
+    }
+
     public bool IsExpanded
     {
         set
