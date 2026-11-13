@@ -10,7 +10,7 @@ namespace DynamicIsland.Core;
 /// </summary>
 sealed class SettingsStore : INotifyPropertyChanged
 {
-    sealed record Data(double Tint = 0.6, string Hotkey = "Ctrl+Alt+I", string[]? HiddenTabs = null);
+    sealed record Data(double Tint = 0.6, string Hotkey = "Ctrl+Alt+I", string[]? HiddenTabs = null, bool HideInFullscreen = false);
 
     public static readonly string[] HotkeyChoices = ["Ctrl+Alt+I", "Ctrl+Shift+Space", "Win+Alt+I", "Ctrl+Alt+Space"];
     static readonly string FilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DynamicIsland", "settings.json");
@@ -21,6 +21,7 @@ sealed class SettingsStore : INotifyPropertyChanged
     readonly HashSet<string> _hidden;
     double _tint;
     string _hotkey;
+    bool _hideInFullscreen;
 
     SettingsStore()
     {
@@ -30,6 +31,7 @@ sealed class SettingsStore : INotifyPropertyChanged
         _tint = Math.Clamp(data.Tint, 0, 1);
         _hotkey = data.Hotkey;
         _hidden = [.. data.HiddenTabs ?? []];
+        _hideInFullscreen = data.HideInFullscreen;
     }
 
     static readonly double[] GlassTints = [0, 0.3, 0.6, 1.0];
@@ -45,6 +47,9 @@ sealed class SettingsStore : INotifyPropertyChanged
 
     public string Hotkey { get => _hotkey; set { if (value == _hotkey) return; _hotkey = value; Changed(nameof(Hotkey)); HotkeyChanged?.Invoke(); } }
 
+    /// <summary>Off by default: the island stays on screen whatever you are doing. On: it steps away while a fullscreen game or video is in front.</summary>
+    public bool HideInFullscreen { get => _hideInFullscreen; set { if (value == _hideInFullscreen) return; _hideInFullscreen = value; Changed(nameof(HideInFullscreen)); } }
+
     public bool IsHidden(string tab) => _hidden.Contains(tab);
     public void SetHidden(string tab, bool hidden) { if (hidden ? _hidden.Add(tab) : _hidden.Remove(tab)) Changed(); }
 
@@ -57,7 +62,7 @@ sealed class SettingsStore : INotifyPropertyChanged
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
-            File.WriteAllText(FilePath, JsonSerializer.Serialize(new Data(_tint, _hotkey, [.. _hidden]), Json));
+            File.WriteAllText(FilePath, JsonSerializer.Serialize(new Data(_tint, _hotkey, [.. _hidden], _hideInFullscreen), Json));
         }
         catch { /* settings are a convenience: never fail the island over them */ }
     }

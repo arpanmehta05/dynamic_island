@@ -14,6 +14,17 @@ static class WindowStyler
     [DllImport("user32.dll")] static extern int SetWindowLong(IntPtr h, int i, int v);
     [DllImport("user32.dll")] static extern bool SetWindowDisplayAffinity(IntPtr h, uint affinity);
 
+    [DllImport("user32.dll")] static extern bool SetWindowPos(IntPtr h, IntPtr after, int x, int y, int cx, int cy, uint flags);
+    const uint SWP_NOSIZE = 0x1, SWP_NOMOVE = 0x2, SWP_NOACTIVATE = 0x10, SWP_SHOWWINDOW = 0x40;
+
+    /// <summary>Puts the island back above other always-on-top windows (and shows it if something hid it) without taking focus, and re-centres it: the screen size may have changed.</summary>
+    public static void KeepOnTop(Window w)
+    {
+        w.Left = (SystemParameters.PrimaryScreenWidth - w.Width) / 2;
+        w.Top = 0;
+        SetWindowPos(new WindowInteropHelper(w).Handle, new IntPtr(-1) /* HWND_TOPMOST */, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+    }
+
     [DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
     [DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr h);
 

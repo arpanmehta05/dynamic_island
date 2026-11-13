@@ -32,6 +32,7 @@ public partial class IslandWindow : Window
     double _restHeight = CollapsedHeight;
     Backdrop? _backdrop;
     FullscreenWatcher? _fullscreen;
+    bool _hidden;
 
     public IslandWindow()
     {
@@ -58,7 +59,7 @@ public partial class IslandWindow : Window
         // Claude Code is asking something: open, and stay open until it is answered.
         _agents.AttentionChanged += attention =>
         {
-            if (_fullscreen?.IsFullscreen == true) return;
+            if (_hidden) return;
             if (attention) { _peek.Stop(); Expand(); }
             else { WindowStyler.AllowTyping(this, false); if (!IsMouseOver) Collapse(); }
         };
@@ -79,15 +80,20 @@ public partial class IslandWindow : Window
         Loaded += (_, _) =>
         {
             _fullscreen = new FullscreenWatcher(new WindowInteropHelper(this).Handle);
-            _fullscreen.Changed += SetHidden;
+            _fullscreen.Changed += _ => ApplyAutoHide();
             _fullscreen.Activity += () => _backdrop!.Poke();
-            SetHidden(_fullscreen.IsFullscreen);
+            _fullscreen.Settled += () => WindowStyler.KeepOnTop(this);
+            SettingsStore.Current.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(SettingsStore.HideInFullscreen)) ApplyAutoHide(); };
+            Microsoft.Win32.SystemEvents.DisplaySettingsChanged += (_, _) => Dispatcher.BeginInvoke(() => WindowStyler.KeepOnTop(this));
+            Microsoft.Win32.SystemEvents.SessionSwitch += (_, _) => Dispatcher.BeginInvoke(() => WindowStyler.KeepOnTop(this));
+            Microsoft.Win32.SystemEvents.PowerModeChanged += (_, _) => Dispatcher.BeginInvoke(() => WindowStyler.KeepOnTop(this));
+            SetHidden(_fullscreen.IsFullscreen && SettingsStore.Current.HideInFullscreen);
         };
     }
 
     void TogglePeek()
     {
-        if (_fullscreen?.IsFullscreen == true) return;
+        if (_hidden) SetHidden(false); // asked for it by hand: bring it back even from a fullscreen hide
         if (_open) { _peek.Stop(); Collapse(); } else { Expand(); _peek.Start(); }
     }
 
@@ -143,8 +149,16 @@ public partial class IslandWindow : Window
         ((Storyboard)Resources["Close"]).Begin(this);
     }
 
+    /// <summary>The island only steps away for a fullscreen app when that is switched on in Settings.</summary>
+    void ApplyAutoHide()
+    {
+        var hide = _fullscreen!.IsFullscreen && SettingsStore.Current.HideInFullscreen;
+        if (hide != _hidden) SetHidden(hide);
+    }
+
     void SetHidden(bool hidden)
     {
+        _hidden = hidden;
         _backdrop!.Active = !hidden;
         ((Storyboard)Resources[hidden ? "Hide" : "Show"]).Begin(this);
     }

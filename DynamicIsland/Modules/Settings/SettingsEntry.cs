@@ -5,14 +5,13 @@ using DynamicIsland.Modules.Agents;
 
 namespace DynamicIsland.Modules.Settings;
 
-/// <summary>One chip in the settings view: a footer button that can be switched off.</summary>
-sealed class TabToggle(TabEntry entry) : INotifyPropertyChanged
+/// <summary>One chip in the settings view: something that is on or off (a footer button, auto-hide).</summary>
+sealed class TabToggle(string name, Func<bool> isOn, Action flip) : INotifyPropertyChanged
 {
-    public TabEntry Entry { get; } = entry;
-    public string Name => Entry.Name;
-    public bool IsOn => !Entry.Hidden;
+    public string Name => name;
+    public bool IsOn => isOn();
     public event PropertyChangedEventHandler? PropertyChanged;
-    public void Refresh() => PropertyChanged?.Invoke(this, new(nameof(IsOn)));
+    public void Flip() { flip(); PropertyChanged?.Invoke(this, new(nameof(IsOn))); }
 }
 
 /// <summary>Which footer buttons show, how dark the glass is and which key opens the island. Everything is saved at once (see <see cref="SettingsStore"/>).</summary>
@@ -33,16 +32,15 @@ sealed class SettingsEntry : TabEntry
     public SettingsEntry(IEnumerable<TabEntry> switchable)
     {
         IsRunning = true;
-        Toggles = [.. switchable.Select(t => new TabToggle(t))];
-        foreach (var t in Toggles) t.Entry.Hidden = Store.IsHidden(t.Name);
+        var tabs = switchable.ToList();
+        foreach (var t in tabs) t.Hidden = Store.IsHidden(t.Name);
+        Toggles =
+        [
+            .. tabs.Select(t => new TabToggle(t.Name, () => !t.Hidden, () => { t.Hidden = !t.Hidden; Store.SetHidden(t.Name, t.Hidden); })),
+            new TabToggle("Auto-hide", () => Store.HideInFullscreen, () => Store.HideInFullscreen = !Store.HideInFullscreen),
+        ];
 
-        Toggle = new ParamCommand(p =>
-        {
-            if (p is not TabToggle t) return;
-            t.Entry.Hidden = !t.Entry.Hidden;
-            Store.SetHidden(t.Name, t.Entry.Hidden);
-            t.Refresh();
-        });
+        Toggle = new ParamCommand(p => (p as TabToggle)?.Flip());
         SetGlass = new ParamCommand(p => Store.Glass = Convert.ToInt32(p));
         NextHotkey = new RelayCommand(() =>
         {

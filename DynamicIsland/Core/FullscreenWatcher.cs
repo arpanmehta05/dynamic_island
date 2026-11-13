@@ -43,13 +43,16 @@ sealed class FullscreenWatcher
 
     /// <summary>The foreground window switched, moved or resized: the picture behind the island is probably about to change.</summary>
     public event Action? Activity;
+
+    /// <summary>The foreground window stopped changing (400 ms after the last event): a good moment to put the island back on top.</summary>
+    public event Action? Settled;
     public bool IsFullscreen => _fullscreen;
 
     public FullscreenWatcher(IntPtr ownWindow)
     {
         _own = ownWindow;
         _proc = OnEvent;
-        _recheck.Tick += (_, _) => { _recheck.Stop(); Evaluate(); };
+        _recheck.Tick += (_, _) => { _recheck.Stop(); Evaluate(); Settled?.Invoke(); };
         SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, IntPtr.Zero, _proc, 0, 0, WINEVENT_OUTOFCONTEXT);
         SetWinEventHook(EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_LOCATIONCHANGE, IntPtr.Zero, _proc, 0, 0, WINEVENT_OUTOFCONTEXT);
         Evaluate();
