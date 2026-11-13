@@ -63,8 +63,12 @@ sealed class FullscreenWatcher
     {
         // Location changes fire constantly; only the foreground window's own frame matters.
         if (evt == EVENT_OBJECT_LOCATIONCHANGE && (idObject != 0 || hwnd != GetForegroundWindow())) return;
-        Activity?.Invoke();
-        Evaluate();
+        try // this runs from a native callback: an exception here would end the whole process
+        {
+            Activity?.Invoke();
+            Evaluate();
+        }
+        catch (Exception ex) { App.Log("window event", ex); }
         _recheck.Stop(); _recheck.Start(); // debounced: fires 400ms after the last event
     }
 

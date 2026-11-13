@@ -122,7 +122,9 @@ sealed class Backdrop
         var r = _region;
         var left = (int)((_w.Left - Pad) * _dpi);
         var big = new Rectangle(r.X * Down, r.Y * Down, r.Width * Down, r.Height * Down);
-        _screen.CopyFromScreen(left + big.X, big.Y, big.X, big.Y, big.Size);
+        // While the PC is locked (or on the secure desktop) the screen can't be read: keep the last picture and snap to the real one afterwards
+        try { _screen.CopyFromScreen(left + big.X, big.Y, big.X, big.Y, big.Size); }
+        catch (System.ComponentModel.Win32Exception) { _snap = true; return; }
         _g.DrawImage(_grab, r, big, GraphicsUnit.Pixel);
 
         var d = _buf.LockBits(r, ImageLockMode.ReadOnly, PixelFormat.Format32bppPArgb);
