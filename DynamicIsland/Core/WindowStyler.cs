@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
+using System.Windows.Media;
 
 namespace DynamicIsland.Core;
 
@@ -15,6 +16,24 @@ static class WindowStyler
     [DllImport("user32.dll")] static extern bool SetWindowDisplayAffinity(IntPtr h, uint affinity);
 
     [DllImport("dwmapi.dll")] static extern int DwmSetWindowAttribute(IntPtr h, int attribute, ref int value, int size);
+
+    [StructLayout(LayoutKind.Sequential)] struct MARGINS { public int Left, Right, Top, Bottom; }
+    [DllImport("dwmapi.dll")] static extern int DwmExtendFrameIntoClientArea(IntPtr h, ref MARGINS margins);
+
+    /// <summary>
+    /// Makes a normal window out of glass like the island: Windows 11's acrylic (the blurred picture behind the window) shows through
+    /// the window's transparent parts, and the title bar is dark. Older Windows just keeps the window's own background.
+    /// </summary>
+    public static void Glass(Window w)
+    {
+        DarkTitleBar(w);
+        var h = new WindowInteropHelper(w).Handle;
+        var acrylic = 3; // DWMWA_SYSTEMBACKDROP_TYPE = 38, DWMSBT_TRANSIENTWINDOW = 3
+        DwmSetWindowAttribute(h, 38, ref acrylic, sizeof(int));
+        var all = new MARGINS { Left = -1, Right = -1, Top = -1, Bottom = -1 };
+        DwmExtendFrameIntoClientArea(h, ref all);
+        HwndSource.FromHwnd(h).CompositionTarget.BackgroundColor = Colors.Transparent;
+    }
 
     /// <summary>A dark title bar for a normal window (DWMWA_USE_IMMERSIVE_DARK_MODE), so it matches the dark content.</summary>
     public static void DarkTitleBar(Window w)

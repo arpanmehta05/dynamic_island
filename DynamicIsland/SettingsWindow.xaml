@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="clr-namespace:DynamicIsland.Views"
         Title="Dynamic Island Settings" Width="900" Height="700" MinWidth="740" MinHeight="520"
-        Background="#131318" WindowStartupLocation="CenterScreen" UseLayoutRounding="True"
+        Background="Transparent" WindowStartupLocation="CenterScreen" UseLayoutRounding="True"
         TextOptions.TextFormattingMode="Ideal" TextOptions.TextRenderingMode="ClearType"
         PreviewKeyDown="Window_PreviewKeyDown">
 
@@ -12,10 +12,10 @@
         <FontFamily x:Key="InterSemiBold">/Fonts/#Inter SemiBold</FontFamily>
         <FontFamily x:Key="Icons">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-        <SolidColorBrush x:Key="Card" Color="#1A1A21"/>
-        <SolidColorBrush x:Key="CardEdge" Color="#262630"/>
+        <SolidColorBrush x:Key="Card" Color="#14FFFFFF"/>
+        <SolidColorBrush x:Key="CardEdge" Color="#24FFFFFF"/>
         <SolidColorBrush x:Key="Accent" Color="#8B7CFF"/>
-        <SolidColorBrush x:Key="Dim" Color="#9A9AAE"/>
+        <SolidColorBrush x:Key="Dim" Color="#A8A8BC"/>
         <CubicEase x:Key="Smooth" EasingMode="EaseOut"/>
 
         <!-- Sidebar entry: a quiet row that fills when it is the chosen section -->
@@ -58,7 +58,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Grid Background="Transparent">
-                            <Border x:Name="Track" CornerRadius="13" Background="#3A3A47"/>
+                            <Border x:Name="Track" CornerRadius="13" Background="#40FFFFFF"/>
                             <Border x:Name="Knob" Width="20" Height="20" CornerRadius="10" Background="White" HorizontalAlignment="Left" Margin="3,0,0,0">
                                 <Border.RenderTransform><TranslateTransform x:Name="Slide"/></Border.RenderTransform>
                             </Border>
@@ -94,10 +94,10 @@
                             <ContentPresenter Margin="14"/>
                         </Grid>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Edge" Property="BorderBrush" Value="#44445A"/></Trigger>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Edge" Property="BorderBrush" Value="#4DFFFFFF"/></Trigger>
                             <Trigger Property="Tag" Value="on">
                                 <Setter TargetName="Edge" Property="BorderBrush" Value="#8B7CFF"/>
-                                <Setter TargetName="Edge" Property="Background" Value="#211F30"/>
+                                <Setter TargetName="Edge" Property="Background" Value="#2A8B7CFF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -117,13 +117,76 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bg" CornerRadius="10" Background="#2A2A36" Padding="16,9">
+                        <Border x:Name="Bg" CornerRadius="10" Background="#26FFFFFF" BorderBrush="#26FFFFFF" BorderThickness="1" Padding="16,9">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bg" Property="Background" Value="#363646"/></Trigger>
-                            <Trigger Property="IsPressed" Value="True"><Setter TargetName="Bg" Property="Background" Value="#44445A"/></Trigger>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bg" Property="Background" Value="#33FFFFFF"/></Trigger>
+                            <Trigger Property="IsPressed" Value="True"><Setter TargetName="Bg" Property="Background" Value="#40FFFFFF"/></Trigger>
                         </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Our own scrollbar: a thin rounded thumb floating over the content; it brightens and thickens under the pointer -->
+        <Style x:Key="InvisibleRepeat" TargetType="RepeatButton">
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="IsTabStop" Value="False"/>
+            <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RepeatButton"><Border Background="Transparent"/></ControlTemplate></Setter.Value></Setter>
+        </Style>
+        <Style x:Key="GlassThumb" TargetType="Thumb">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Thumb">
+                        <Grid Background="Transparent">
+                            <Border x:Name="Bar" Width="5" CornerRadius="2.5" Background="White" Opacity="0.3" HorizontalAlignment="Center" RenderTransformOrigin="0.5,0.5">
+                                <Border.RenderTransform><ScaleTransform x:Name="Grow"/></Border.RenderTransform>
+                            </Border>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Trigger.EnterActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Bar" Storyboard.TargetProperty="Opacity" To="0.6" Duration="0:0:0.15"/>
+                                    <DoubleAnimation Storyboard.TargetName="Grow" Storyboard.TargetProperty="ScaleX" To="1.5" Duration="0:0:0.2" EasingFunction="{StaticResource Smooth}"/>
+                                </Storyboard></BeginStoryboard></Trigger.EnterActions>
+                                <Trigger.ExitActions><BeginStoryboard><Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Bar" Storyboard.TargetProperty="Opacity" To="0.3" Duration="0:0:0.25"/>
+                                    <DoubleAnimation Storyboard.TargetName="Grow" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.25" EasingFunction="{StaticResource Smooth}"/>
+                                </Storyboard></BeginStoryboard></Trigger.ExitActions>
+                            </Trigger>
+                            <Trigger Property="IsDragging" Value="True"><Setter TargetName="Bar" Property="Opacity" Value="0.85"/></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="GlassScrollBar" TargetType="ScrollBar">
+            <Setter Property="Width" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Grid Background="Transparent">
+                            <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                <Track.DecreaseRepeatButton><RepeatButton Command="ScrollBar.PageUpCommand" Style="{StaticResource InvisibleRepeat}"/></Track.DecreaseRepeatButton>
+                                <Track.IncreaseRepeatButton><RepeatButton Command="ScrollBar.PageDownCommand" Style="{StaticResource InvisibleRepeat}"/></Track.IncreaseRepeatButton>
+                                <Track.Thumb><Thumb Style="{StaticResource GlassThumb}"/></Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="ScrollViewer">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollViewer">
+                        <Grid>
+                            <ScrollContentPresenter CanContentScroll="{TemplateBinding CanContentScroll}"/>
+                            <ScrollBar x:Name="PART_VerticalScrollBar" Style="{StaticResource GlassScrollBar}" HorizontalAlignment="Right" Margin="0,8,4,8"
+                                       Value="{TemplateBinding VerticalOffset}" Maximum="{TemplateBinding ScrollableHeight}" ViewportSize="{TemplateBinding ViewportHeight}"
+                                       Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"/>
+                        </Grid>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -145,10 +208,23 @@
     </Window.Resources>
 
     <Grid>
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#7A15151D" Offset="0"/><GradientStop Color="#940D0D14" Offset="1"/>
+            </LinearGradientBrush>
+        </Grid.Background>
         <Grid.ColumnDefinitions><ColumnDefinition Width="232"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+        <!-- the same diagonal sheen the island has -->
+        <Rectangle IsHitTestVisible="False">
+            <Rectangle.Fill>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#16FFFFFF" Offset="0"/><GradientStop Color="#00FFFFFF" Offset="0.4"/><GradientStop Color="#00FFFFFF" Offset="0.75"/><GradientStop Color="#0AFFFFFF" Offset="1"/>
+                </LinearGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
 
         <!-- Sidebar -->
-        <Border Background="#0E0E12">
+        <Border Background="#40000000" BorderBrush="#18FFFFFF" BorderThickness="0,0,1,0">
             <Grid Margin="16,22,16,16">
                 <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                 <StackPanel Orientation="Horizontal" Margin="6,0,0,26">
@@ -170,7 +246,7 @@
         </Border>
 
         <!-- Content: one panel per section -->
-        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Padding="0">
+        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Padding="0" Background="Transparent">
             <Grid Margin="44,40,44,32" MaxWidth="720" HorizontalAlignment="Left">
 
                 <!-- Appearance -->

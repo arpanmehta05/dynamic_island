@@ -24,8 +24,9 @@ sealed partial class AudioDeviceStatus : INotifyPropertyChanged
 
     sealed record Found(AudioKind Kind, string Name, int? Battery);
 
-    readonly DispatcherTimer _debounce = new() { Interval = TimeSpan.FromMilliseconds(500) };
-    readonly DeviceWatcher _connected, _batteries;
+    readonly DispatcherTimer _debounce = new();
+    readonly DeviceWatcher _connected, _batteries, _outputs;
+    BluetoothDevice? _worn; // the connected device being watched: its own status event is the quickest sign that it went away
     bool _ready, _busy, _again;
     AudioKind _kind;
     string _name = "";
@@ -57,21 +58,56 @@ sealed partial class AudioDeviceStatus : INotifyPropertyChanged
 
         _connected = DeviceInformation.CreateWatcher(BluetoothDevice.GetDeviceSelectorFromConnectionStatus(BluetoothConnectionStatus.Connected));
         _connected.Added += (_, _) => Later();
-        _connected.Removed += (_, _) => Later();
+        _connected.Removed += (_, _) => Later(0);
         _connected.Updated += (_, _) => Later();
         _connected.Start();
+
+        // an audio output appearing or disappearing (the earbuds' sound endpoint goes the moment they drop)
+        _outputs = DeviceInformation.CreateWatcher(MediaDevice.GetAudioRenderSelector());
+        _outputs.Added += (_, _) => Later();
+        _outputs.Removed += (_, _) => Later(0);
+        _outputs.Updated += (_, _) => Later(60);
+        _outputs.Start();
 
         // a hands-free node's battery value changed
         _batteries = DeviceInformation.CreateWatcher("System.Devices.DeviceInstanceId:~~\"0000111e-0000-1000\"", [BatteryKey], DeviceInformationKind.Device);
         _batteries.Updated += (_, _) => Later();
         _batteries.Start();
 
-        MediaDevice.DefaultAudioRenderDeviceChanged += (_, _) => Later();
+        MediaDevice.DefaultAudioRenderDeviceChanged += (_, _) => Later(60);
         _ = RefreshAsync();
     }
 
-    /// <summary>Events arrive in bursts (a connecting device raises many): look once, shortly after the last one.</summary>
-    void Later() => Application.Current?.Dispatcher.BeginInvoke(() => { _debounce.Stop(); _debounce.Start(); });
+    /// <summary>
+    /// Events arrive in bursts (a connecting device raises many): look once, shortly after the last one. Something going away is
+    /// looked at at once (0), so that its banner is not late.
+    /// </summary>
+    void Later(int ms = 350) => Application.Current?.Dispatcher.BeginInvoke(() =>
+    {
+        _debounce.Stop();
+        if (ms == 0) { _ = RefreshAsync(); return; }
+        _debounce.Interval = TimeSpan.FromMilliseconds(ms);
+        _debounce.Start();
+    });
+
+    /// <summary>The watched device's own connection status changed: if it dropped, say so straight away, then look for what else is connected.</summary>
+    void OnWornStatus(BluetoothDevice device, object _)
+    {
+        if (device.ConnectionStatus == BluetoothConnectionStatus.Connected) return;
+        Application.Current?.Dispatcher.BeginInvoke(() =>
+        {
+            if (Kind is AudioKind.Earbuds or AudioKind.Headphones) Apply(null);
+            _ = RefreshAsync();
+        });
+    }
+
+    void Unwatch()
+    {
+        if (_worn is null) return;
+        _worn.ConnectionStatusChanged -= OnWornStatus;
+        _worn.Dispose();
+        _worn = null;
+    }
 
     async Task RefreshAsync()
     {
@@ -106,18 +142,24 @@ sealed partial class AudioDeviceStatus : INotifyPropertyChanged
         _ready = true;
     }
 
-    static async Task<Found?> FindAsync()
+    async Task<Found?> FindAsync()
     {
         foreach (var info in await DeviceInformation.FindAllAsync(BluetoothDevice.GetDeviceSelectorFromConnectionStatus(BluetoothConnectionStatus.Connected)))
         {
-            using var bt = await BluetoothDevice.FromIdAsync(info.Id);
-            if (bt is null) continue;
+            var bt = await BluetoothDevice.FromIdAsync(info.Id);
+            // the list can lag behind: the device itself knows whether it is connected right now
+            if (bt is null || bt.ConnectionStatus != BluetoothConnectionStatus.Connected) { bt?.Dispose(); continue; }
             var cod = bt.ClassOfDevice;
             var minor = (cod.RawValue >> 2) & 0x3F; // audio minor classes: 1 wearable headset, 2 hands-free, 5 loudspeaker, 6 headphones...
-            if (cod.MajorClass != BluetoothMajorClass.AudioVideo || minor == 5) continue; // a phone or a speaker is not what you wear
+            if (cod.MajorClass != BluetoothMajorClass.AudioVideo || minor == 5) { bt.Dispose(); continue; } // a phone or a speaker is not what you wear
+
             var earbuds = minor == 1 || Earbud().IsMatch(bt.Name);
-            return new Found(earbuds ? AudioKind.Earbuds : AudioKind.Headphones, bt.Name, await BatteryOf(bt.BluetoothAddress));
+            var found = new Found(earbuds ? AudioKind.Earbuds : AudioKind.Headphones, bt.Name, await BatteryOf(bt.BluetoothAddress));
+            if (_worn?.BluetoothAddress == bt.BluetoothAddress) bt.Dispose();
+            else { Unwatch(); _worn = bt; bt.ConnectionStatusChanged += OnWornStatus; }
+            return found;
         }
+        Unwatch();
 
         var id = MediaDevice.GetDefaultAudioRenderId(AudioDeviceRole.Default);
         if (string.IsNullOrEmpty(id)) return null;

@@ -15,7 +15,7 @@ public partial class SettingsWindow : Window
     {
         InitializeComponent();
         DataContext = _model = model;
-        SourceInitialized += (_, _) => WindowStyler.DarkTitleBar(this);
+        SourceInitialized += (_, _) => WindowStyler.Glass(this);
     }
 
     // While "Press the new shortcut" is showing, keys go to the model (a normal window can take typing, unlike the island)
