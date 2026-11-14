@@ -396,6 +396,7 @@
             <DoubleAnimation Storyboard.TargetName="Banner" Storyboard.TargetProperty="Opacity" To="1" BeginTime="0:0:0.08" Duration="0:0:0.28"/>
             <DoubleAnimation Storyboard.TargetName="BannerScale" Storyboard.TargetProperty="ScaleX" From="0.78" To="1" Duration="0:0:0.62" EasingFunction="{StaticResource Spring}"/>
             <DoubleAnimation Storyboard.TargetName="BannerScale" Storyboard.TargetProperty="ScaleY" From="0.6" To="1" Duration="0:0:0.62" EasingFunction="{StaticResource Spring}"/>
+            <DoubleAnimation Storyboard.TargetName="Slash" Storyboard.TargetProperty="StrokeDashOffset" From="14" To="0" BeginTime="0:0:0.4" Duration="0:0:0.45" EasingFunction="{StaticResource Smooth}"/>
         </Storyboard>
         <Storyboard x:Key="BannerOut">
             <DoubleAnimation Storyboard.TargetName="Banner" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.16"/>
@@ -558,14 +559,14 @@
 
                 <!-- Equalizer: five soft bars that dance only while something is playing -->
                 <views:EqualizerControl Grid.Column="2" Margin="0,0,13,0" HorizontalAlignment="Right" VerticalAlignment="Center"
-                                        Active="{Binding Media.IsPlaying}" Visibility="{Binding Media.IsPlaying, Converter={StaticResource BoolToVis}}"/>
+                                        Active="{Binding Agents.ShowEqualizer}" Visibility="{Binding Agents.ShowEqualizer, Converter={StaticResource BoolToVis}}"/>
                 <!-- Working indicator for the notch: three dots that light up in turn (animates only while shown) -->
                 <views:DotsControl Grid.Column="2" Margin="0,0,11,0" HorizontalAlignment="Right" VerticalAlignment="Center"
                                    Fill="{Binding Agents.CompactAgent.Accent}" Active="{Binding Agents.ShowCompactAgent}"
                                    Visibility="{Binding Agents.ShowCompactAgent, Converter={StaticResource BoolToVis}}"/>
 
                 <!-- Charger connected (or battery low): the pill grows to the left by exactly this segment, holding a little battery and the percentage -->
-                <StackPanel Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="-60,0,0,0"
+                <StackPanel Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="-76,0,0,0"
                             Visibility="{Binding Power.ShowIndicator, Converter={StaticResource BoolToVis}}">
                     <Grid Width="26" Height="12" VerticalAlignment="Center">
                         <Border Margin="0,0,2,0" CornerRadius="3.5" BorderBrush="{Binding Power.Accent}" BorderThickness="1.3" Opacity="0.85"/>
@@ -635,6 +636,9 @@
                 <Grid Width="38" Height="38" Margin="14,0,0,0" HorizontalAlignment="Left">
                     <Ellipse Fill="{Binding Banners.Current.Accent}" Opacity="0.28"/>
                     <Path Data="{Binding Banners.Current.Icon}" Stroke="{Binding Banners.Current.Accent}" Fill="{Binding Banners.IconFill}" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="20" Height="20"/>
+                    <!-- struck through when a device disconnects: the line is drawn across the icon as the banner arrives -->
+                    <Path x:Name="Slash" Data="M3 3 21 21" Stroke="White" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeDashArray="14 14" StrokeDashOffset="14" Stretch="Fill" Width="24" Height="24"
+                          Visibility="{Binding Banners.Off, Converter={StaticResource BoolToVis}}"/>
                 </Grid>
                 <StackPanel Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center">
                     <TextBlock Text="{Binding Banners.Current.Title}" Foreground="White" TextTrimming="CharacterEllipsis" FontFamily="{StaticResource InterSemiBold}" FontSize="13.5"/>

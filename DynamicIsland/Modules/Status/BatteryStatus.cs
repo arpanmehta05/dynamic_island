@@ -41,8 +41,20 @@ sealed class BatteryStatus : INotifyPropertyChanged
         SystemEvents.PowerModeChanged += (_, e) => { if (e.Mode == PowerModes.StatusChange) OnUi(Refresh); };
     }
 
+    /// <summary>Development: DI_DEMO_BATTERY=18 pretends the battery is at 18% and unplugged.</summary>
+    static readonly int? Demo = int.TryParse(Environment.GetEnvironmentVariable("DI_DEMO_BATTERY"), out var demo) ? demo : null;
+
     void Refresh()
     {
+        if (Demo is { } pretend)
+        {
+            HasBattery = true;
+            Percent = pretend;
+            Plugged = false;
+            Raise(nameof(HasBattery), nameof(ShowIndicator));
+            return;
+        }
+
         var power = System.Windows.Forms.SystemInformation.PowerStatus;
         var charge = power.BatteryChargeStatus; // Unknown is every bit set, so it has to be compared whole
         HasBattery = charge != System.Windows.Forms.BatteryChargeStatus.Unknown && !charge.HasFlag(System.Windows.Forms.BatteryChargeStatus.NoSystemBattery);

@@ -47,6 +47,8 @@ sealed partial class AudioDeviceStatus : INotifyPropertyChanged
 
     /// <summary>A device just connected (not raised for what was already connected at startup).</summary>
     public event Action<string, AudioKind, int?>? DeviceConnected;
+    /// <summary>The device you were wearing went away (switched off, out of range, unplugged).</summary>
+    public event Action<string, AudioKind>? DeviceDisconnected;
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public AudioDeviceStatus()
@@ -88,13 +90,19 @@ sealed partial class AudioDeviceStatus : INotifyPropertyChanged
         finally { _busy = false; }
     }
 
+    /// <summary>Development: DI_DEMO_AUDIO=earbuds|headphones|wired pretends that kind of device is connected.</summary>
+    static readonly AudioKind? Demo = Enum.TryParse<AudioKind>(Environment.GetEnvironmentVariable("DI_DEMO_AUDIO"), true, out var demo) ? demo : null;
+
     void Apply(Found? found)
     {
+        if (Demo is { } d) found = new Found(d, d == AudioKind.Wired ? "Wired headphones" : "Demo device", 72);
         var arrived = found is not null && (Kind == AudioKind.None || Name != found.Name);
+        var left = found is null && Kind != AudioKind.None ? (Name, Kind) : default((string, AudioKind)?);
         Kind = found?.Kind ?? AudioKind.None;
         Name = found?.Name ?? "";
         Battery = found?.Battery;
         if (arrived && _ready) DeviceConnected?.Invoke(found!.Name, found.Kind, found.Battery);
+        if (left is { } gone && _ready) DeviceDisconnected?.Invoke(gone.Item1, gone.Item2);
         _ready = true;
     }
 

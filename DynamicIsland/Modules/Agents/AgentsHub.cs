@@ -57,8 +57,11 @@ class AgentsHub : INotifyPropertyChanged
 
     // Collapsed notch: with nothing playing, the first assistant that is working shows up beside the time.
     public AgentInfo? CompactAgent { get; private set; }
-    public bool ShowCompactAgent => !_media.IsPlaying && CompactAgent is not null;
-    public bool ShowCover => _media.HasMedia && !ShowCompactAgent;
+    /// <summary>Development: DI_DEMO_IDLE=1 pretends nothing is playing and no assistant is working (to look at the idle pill).</summary>
+    static readonly bool DemoIdle = Environment.GetEnvironmentVariable("DI_DEMO_IDLE") is not null;
+    public bool ShowCompactAgent => !DemoIdle && !_media.IsPlaying && CompactAgent is not null;
+    public bool ShowCover => !DemoIdle && _media.HasMedia && !ShowCompactAgent;
+    public bool ShowEqualizer => !DemoIdle && _media.IsPlaying;
     /// <summary>Nothing playing and no assistant working: the island's own avatar sits beside the time.</summary>
     public bool ShowAvatar => !ShowCover && !ShowCompactAgent;
 
@@ -92,7 +95,7 @@ class AgentsHub : INotifyPropertyChanged
             a.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(TabEntry.IsWorking)) UpdateCompact(); };
         media.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName is nameof(MediaModule.IsPlaying) or nameof(MediaModule.HasMedia)) Raise(nameof(ShowCompactAgent), nameof(ShowCover), nameof(ShowAvatar));
+            if (e.PropertyName is nameof(MediaModule.IsPlaying) or nameof(MediaModule.HasMedia)) Raise(nameof(ShowCompactAgent), nameof(ShowCover), nameof(ShowAvatar), nameof(ShowEqualizer));
         };
 
         _timer.Tick += (_, _) => RefreshAll();

@@ -24,7 +24,7 @@ sealed class Backdrop
     const int Down = 4; // screen pixels per backdrop pixel
 
     // Collapsed pill: 180 wide, 32 tall, centred in the window, 6 below the screen edge. Keep a margin for the lens/blur and the spring overshoot.
-    const double NotchLeft = 40, NotchWidth = 340, NotchHeight = 6 + 32 + 50;
+    const double NotchLeft = 15, NotchWidth = 380, NotchHeight = 6 + 32 + 50;
 
     static readonly TimeSpan Fast = TimeSpan.FromMilliseconds(33), FastCollapsed = TimeSpan.FromMilliseconds(80), Idle = TimeSpan.FromMilliseconds(250), ShrinkDelay = TimeSpan.FromMilliseconds(900);
     const int Ease = 115;      // fraction (of 256) of the remaining difference closed per frame

@@ -19,7 +19,7 @@ public partial class IslandWindow : Window
     // A layered window repaints its whole surface every frame, so the window is only as tall as it needs to be:
     // just the pill (plus its shadow) when collapsed; when open, the content's own height (a question from Claude can be tall).
     const double CollapsedHeight = 70, TallestHeight = 456, Gap = 6, Side = 20, ShadowRoom = 30;
-    static readonly Rect Pill = new(110, Gap, 220, 32), WidePill = new(58, Gap, 252, 32), BannerRect = new(80, Gap, 280, 64);
+    static readonly Rect Pill = new(110, Gap, 220, 32), WidePill = new(40, Gap, 270, 32), BannerRect = new(80, Gap, 280, 64);
     static readonly SpringEase OpenSpring = new() { Damping = 0.72, Frequency = 13 }, CloseSpring = new() { Damping = 0.88, Frequency = 12 };
 
     readonly MediaModule _media = new();
@@ -160,7 +160,7 @@ public partial class IslandWindow : Window
     }
 
     /// <summary>Growing happens at once (the glass needs the room now); shrinking waits until the glass has got there.</summary>
-    /// <summary>While a battery is shown the pill is 72 wider, all of it on the left (the battery segment); everything else stays exactly where it was.</summary>
+    /// <summary>While a battery is shown the pill is 90 wider, all of it on the left (the battery segment); everything else stays exactly where it was.</summary>
     void MorphToPill()
     {
         _pillWide = _battery.ShowIndicator;
