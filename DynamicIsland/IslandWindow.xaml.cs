@@ -10,6 +10,7 @@ using DynamicIsland.Modules;
 using DynamicIsland.Modules.Agents;
 using DynamicIsland.Modules.Hud;
 using DynamicIsland.Modules.Shots;
+using DynamicIsland.Modules.Status;
 
 namespace DynamicIsland;
 
@@ -18,12 +19,15 @@ public partial class IslandWindow : Window
     // A layered window repaints its whole surface every frame, so the window is only as tall as it needs to be:
     // just the pill (plus its shadow) when collapsed; when open, the content's own height (a question from Claude can be tall).
     const double CollapsedHeight = 70, TallestHeight = 456, Gap = 6, Side = 20, ShadowRoom = 30;
-    static readonly Rect Pill = new(130, Gap, 180, 32);
+    static readonly Rect Pill = new(110, Gap, 220, 32), WidePill = new(58, Gap, 252, 32), BannerRect = new(80, Gap, 280, 64);
     static readonly SpringEase OpenSpring = new() { Damping = 0.72, Frequency = 13 }, CloseSpring = new() { Damping = 0.88, Frequency = 12 };
 
     readonly MediaModule _media = new();
     readonly AgentsHub _agents;
     readonly HudModule _hud = new();
+    readonly BatteryStatus _battery = new();
+    readonly AudioDeviceStatus _audio = new();
+    readonly BannerHub _banners;
     readonly DispatcherTimer _shrink = new() { Interval = TimeSpan.FromMilliseconds(900) }; // waits for the closing animation
     readonly DispatcherTimer _peek = new() { Interval = TimeSpan.FromSeconds(6) };
     readonly DispatcherTimer _reset = new() { Interval = TimeSpan.FromMilliseconds(220) }; // once the content has faded out
@@ -33,14 +37,18 @@ public partial class IslandWindow : Window
     double _restHeight = CollapsedHeight;
     Backdrop? _backdrop;
     FullscreenWatcher? _fullscreen;
-    bool _hidden, _snipping;
+    bool _hidden, _snipping, _banner, _pillWide;
     SnipWatcher? _snip;
 
     public IslandWindow()
     {
         InitializeComponent();
         _agents = new AgentsHub(_media);
-        DataContext = new { Clock = new ClockModule(), Media = _media, Agents = _agents, Hud = _hud };
+        _banners = new BannerHub(_battery, _audio);
+        _battery.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(BatteryStatus.ShowIndicator)) FitPill(); };
+        ((Storyboard)Resources["Show"]).Completed += (_, _) => { _pillWide = false; FitPill(); }; // the entrance always ends on the plain pill
+        _banners.ShowingChanged += showing => { if (showing) ShowBanner(); else HideBanner(); };
+        DataContext = new { Clock = new ClockModule(), Media = _media, Agents = _agents, Hud = _hud, Power = _battery, Audio = _audio, Banners = _banners };
         _agents.TabChanged += direction => Motion.SlideIn(MainBody, direction);
         _shrink.Tick += (_, _) => { _shrink.Stop(); Height = _restHeight; };
         _reset.Tick += (_, _) => { _reset.Stop(); if (!_open) _agents.ResetTab(); };
@@ -104,8 +112,31 @@ public partial class IslandWindow : Window
         if (_open) { _peek.Stop(); Collapse(); } else { Expand(); _peek.Start(); }
     }
 
+    /// <summary>Only a closed, visible island shows banners; opening it (or hiding it) takes over.</summary>
+    void ShowBanner()
+    {
+        if (_open || _hidden || _snipping || _banner) return;
+        _banner = true;
+        Resize(Gap + BannerRect.Height + ShadowRoom);
+        _backdrop?.Expand(Math.Max(Gap + BannerRect.Height + ShadowRoom, Height));
+        Morph(BannerRect, 26, OpenSpring, 0.65);
+        ((Storyboard)Resources["BannerIn"]).Begin(this);
+    }
+
+    void HideBanner()
+    {
+        if (!_banner) return;
+        _banner = false;
+        if (_open) return;
+        Resize(CollapsedHeight);
+        _backdrop?.Collapse();
+        MorphToPill();
+        ((Storyboard)Resources["BannerOut"]).Begin(this);
+    }
+
     void Expand()
     {
+        if (_banner) { _banner = false; ((Storyboard)Resources["BannerOut"]).Begin(this); }
         _shrink.Stop();
         _reset.Stop();
         if (_open) return;
@@ -129,6 +160,20 @@ public partial class IslandWindow : Window
     }
 
     /// <summary>Growing happens at once (the glass needs the room now); shrinking waits until the glass has got there.</summary>
+    /// <summary>While a battery is shown the pill is 72 wider, all of it on the left (the battery segment); everything else stays exactly where it was.</summary>
+    void MorphToPill()
+    {
+        _pillWide = _battery.ShowIndicator;
+        Morph(_pillWide ? WidePill : Pill, 16, CloseSpring, 0.6);
+    }
+
+    /// <summary>The charger was plugged or unplugged (or the battery went low) while the island is closed: grow or shrink the pill.</summary>
+    void FitPill()
+    {
+        if (_open || _banner || _hidden || _pillWide == _battery.ShowIndicator) return;
+        MorphToPill();
+    }
+
     void Resize(double height)
     {
         _restHeight = height;
@@ -154,7 +199,7 @@ public partial class IslandWindow : Window
         _backdrop?.Collapse();
         _media.Tracking = false;
         _agents.IsExpanded = false;
-        Morph(Pill, 16, CloseSpring, 0.6);
+        MorphToPill();
         ((Storyboard)Resources["Close"]).Begin(this);
     }
 

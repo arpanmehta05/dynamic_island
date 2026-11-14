@@ -390,6 +390,18 @@
             <DoubleAnimation Storyboard.TargetName="CompactScale" Storyboard.TargetProperty="ScaleY" From="1.25" To="1" BeginTime="0:0:0.1" Duration="0:0:0.5" EasingFunction="{StaticResource SoftSpring}"/>
         </Storyboard>
 
+        <!-- A short announcement (charger, low battery, headphones): the pill grows into a banner and back -->
+        <Storyboard x:Key="BannerIn">
+            <DoubleAnimation Storyboard.TargetName="Compact" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.1"/>
+            <DoubleAnimation Storyboard.TargetName="Banner" Storyboard.TargetProperty="Opacity" To="1" BeginTime="0:0:0.08" Duration="0:0:0.28"/>
+            <DoubleAnimation Storyboard.TargetName="BannerScale" Storyboard.TargetProperty="ScaleX" From="0.78" To="1" Duration="0:0:0.62" EasingFunction="{StaticResource Spring}"/>
+            <DoubleAnimation Storyboard.TargetName="BannerScale" Storyboard.TargetProperty="ScaleY" From="0.6" To="1" Duration="0:0:0.62" EasingFunction="{StaticResource Spring}"/>
+        </Storyboard>
+        <Storyboard x:Key="BannerOut">
+            <DoubleAnimation Storyboard.TargetName="Banner" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.16"/>
+            <DoubleAnimation Storyboard.TargetName="Compact" Storyboard.TargetProperty="Opacity" To="1" BeginTime="0:0:0.22" Duration="0:0:0.22"/>
+        </Storyboard>
+
         <!-- Fullscreen app in front: the glass pinches into a droplet, then is pulled up off the screen -->
         <Storyboard x:Key="Hide">
             <RectAnimationUsingKeyFrames Storyboard.TargetName="Shape" Storyboard.TargetProperty="Rect">
@@ -552,6 +564,52 @@
                                    Fill="{Binding Agents.CompactAgent.Accent}" Active="{Binding Agents.ShowCompactAgent}"
                                    Visibility="{Binding Agents.ShowCompactAgent, Converter={StaticResource BoolToVis}}"/>
 
+                <!-- Charger connected (or battery low): the pill grows to the left by exactly this segment, holding a little battery and the percentage -->
+                <StackPanel Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="-60,0,0,0"
+                            Visibility="{Binding Power.ShowIndicator, Converter={StaticResource BoolToVis}}">
+                    <Grid Width="26" Height="12" VerticalAlignment="Center">
+                        <Border Margin="0,0,2,0" CornerRadius="3.5" BorderBrush="{Binding Power.Accent}" BorderThickness="1.3" Opacity="0.85"/>
+                        <Border Width="2" Height="5" CornerRadius="1" HorizontalAlignment="Right" VerticalAlignment="Center" Background="{Binding Power.Accent}" Opacity="0.85"/>
+                        <Border Margin="2.3,2.3,0,2.3" CornerRadius="2" Background="{Binding Power.Accent}" HorizontalAlignment="Left" Width="{Binding Power.FillWidth}">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Style.Triggers>
+                                        <!-- breathes while charging (a few frames per second is plenty) -->
+                                        <DataTrigger Binding="{Binding Power.Plugged}" Value="True">
+                                            <DataTrigger.EnterActions><BeginStoryboard x:Name="Breathe"><Storyboard Timeline.DesiredFrameRate="10">
+                                                <DoubleAnimation Storyboard.TargetProperty="Opacity" From="1" To="0.55" Duration="0:0:1.3" AutoReverse="True" RepeatBehavior="Forever"/>
+                                            </Storyboard></BeginStoryboard></DataTrigger.EnterActions>
+                                            <DataTrigger.ExitActions><StopStoryboard BeginStoryboardName="Breathe"/></DataTrigger.ExitActions>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                        </Border>
+                        <Path Data="{x:Static core:Logos.Bolt}" Fill="White" Stretch="Uniform" Width="6" Height="8" Margin="0,0,2,0" VerticalAlignment="Center" HorizontalAlignment="Center"
+                              Visibility="{Binding Power.Plugged, Converter={StaticResource BoolToVis}}"/>
+                    </Grid>
+                    <TextBlock Text="{Binding Power.IndicatorText}" Foreground="{Binding Power.Accent}" FontFamily="{StaticResource InterSemiBold}" FontSize="10.5" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Earbuds / headphones connected and nothing else going on: their icon, where the equalizer would be -->
+                <Path Grid.Column="2" Data="{Binding Audio.Icon}" Stroke="#E6FFFFFF" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                      Stretch="Uniform" Width="17" Height="17" Margin="0,0,13,0" HorizontalAlignment="Right" VerticalAlignment="Center" ToolTip="{Binding Audio.Name}">
+                    <Path.Style>
+                        <Style TargetType="Path">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding Audio.IsConnected}" Value="True"/>
+                                        <Condition Binding="{Binding Agents.ShowAvatar}" Value="True"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Path.Style>
+                </Path>
+
                 <!-- Microphone / camera in use: a small orange / green dot beside the time -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,-16,0">
                     <Ellipse Width="7" Height="7" Fill="#FF9F0A" Margin="0,0,3,0" ToolTip="Microphone in use" Visibility="{Binding Hud.Microphone, Converter={StaticResource BoolToVis}}"/>
@@ -568,6 +626,22 @@
                         </Border>
                     </StackPanel>
                 </Border>
+            </Grid>
+
+            <!-- Banner: icon in an accent circle, a title, a quiet line and (when there is one) a level bar that fills up -->
+            <Grid x:Name="Banner" Width="280" Height="64" Margin="0,6,0,0" HorizontalAlignment="Center" VerticalAlignment="Top" Opacity="0" IsHitTestVisible="False" RenderTransformOrigin="0.5,0.5">
+                <Grid.RenderTransform><ScaleTransform x:Name="BannerScale" ScaleX="0.78" ScaleY="0.6"/></Grid.RenderTransform>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="58"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                <Grid Width="38" Height="38" Margin="14,0,0,0" HorizontalAlignment="Left">
+                    <Ellipse Fill="{Binding Banners.Current.Accent}" Opacity="0.28"/>
+                    <Path Data="{Binding Banners.Current.Icon}" Stroke="{Binding Banners.Current.Accent}" Fill="{Binding Banners.IconFill}" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="20" Height="20"/>
+                </Grid>
+                <StackPanel Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Banners.Current.Title}" Foreground="White" TextTrimming="CharacterEllipsis" FontFamily="{StaticResource InterSemiBold}" FontSize="13.5"/>
+                    <TextBlock Text="{Binding Banners.Current.Subtitle}" Foreground="#B3FFFFFF" TextTrimming="CharacterEllipsis" FontFamily="{StaticResource Inter}" FontSize="11" Margin="0,1,0,0"/>
+                    <views:LevelBarControl Margin="0,3,0,0" Percent="{Binding Banners.Current.Percent, FallbackValue=0}" Fill="{Binding Banners.Current.Accent}" Charging="{Binding Banners.Current.Charging}" Run="{Binding Banners.Showing}"
+                                           Visibility="{Binding Banners.HasPercent, Converter={StaticResource BoolToVis}}"/>
+                </StackPanel>
             </Grid>
 
             <!-- Expanded: media player when something is playing, otherwise the big clock -->

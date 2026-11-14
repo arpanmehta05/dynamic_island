@@ -1,0 +1,36 @@
+<UserControl x:Class="DynamicIsland.Views.LevelBarControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Height="16">
+
+    <UserControl.Resources>
+        <!-- A soft glint travelling along the filled part while charging (clipped to the fill by its parent) -->
+        <Storyboard x:Key="Glint" Timeline.DesiredFrameRate="24" RepeatBehavior="Forever">
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="GlintMove" Storyboard.TargetProperty="X">
+                <LinearDoubleKeyFrame KeyTime="0:0:0" Value="-60"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:1.1" Value="260"><EasingDoubleKeyFrame.EasingFunction><SineEase EasingMode="EaseInOut"/></EasingDoubleKeyFrame.EasingFunction></EasingDoubleKeyFrame>
+                <LinearDoubleKeyFrame KeyTime="0:0:1.9" Value="260"/>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+        <Grid VerticalAlignment="Center" Height="7">
+            <Rectangle RadiusX="3.5" RadiusY="3.5" Fill="#2EFFFFFF"/>
+            <Grid x:Name="FillBox" ClipToBounds="True" RenderTransformOrigin="0,0.5">
+                <Grid.RenderTransform><ScaleTransform x:Name="FillScale" ScaleX="0"/></Grid.RenderTransform>
+                <Rectangle x:Name="FillRect" RadiusX="3.5" RadiusY="3.5"/>
+                <Rectangle x:Name="GlintRect" Width="46" HorizontalAlignment="Left" Opacity="0" IsHitTestVisible="False">
+                    <Rectangle.Fill>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#00FFFFFF" Offset="0"/><GradientStop Color="#99FFFFFF" Offset="0.5"/><GradientStop Color="#00FFFFFF" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Rectangle.Fill>
+                    <Rectangle.RenderTransform><TranslateTransform x:Name="GlintMove" X="-60"/></Rectangle.RenderTransform>
+                </Rectangle>
+            </Grid>
+        </Grid>
+        <TextBlock x:Name="PercentText" Grid.Column="1" Margin="10,0,0,0" MinWidth="34" TextAlignment="Right" VerticalAlignment="Center" Foreground="White" FontFamily="/Fonts/#Inter SemiBold" FontSize="12"/>
+    </Grid>
+</UserControl>
