@@ -1,4 +1,5 @@
-﻿using System.IO;
+using System.IO;
+using DynamicIsland.Core;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -15,7 +16,12 @@ public partial class App : Application
         if (e.Args.Contains("--claude-approve")) Environment.Exit(Modules.Approvals.ApprovalServer.RunHook());
 
         _single = new Mutex(true, "DynamicIsland.SingleInstance", out var isFirst);
-        if (!isFirst) { Shutdown(); return; }
+        if (!isFirst)
+        {
+            if (e.Args.Contains("--settings")) SettingsSignal.Raise(); // the island is already running: ask it to open the settings
+            Shutdown();
+            return;
+        }
 
         // A small widget should not vanish because one refresh hit something unexpected: log it and carry on.
         DispatcherUnhandledException += (_, args) => { Log("UI thread", args.Exception); args.Handled = true; };
@@ -23,7 +29,12 @@ public partial class App : Application
         TaskScheduler.UnobservedTaskException += (_, args) => { Log("background task", args.Exception); args.SetObserved(); };
 
         base.OnStartup(e);
+
+        SettingsSignal.Listen(() => Dispatcher.BeginInvoke(OpenSettings));
+        if (e.Args.Contains("--settings")) Dispatcher.BeginInvoke(OpenSettings, DispatcherPriority.ContextIdle);
     }
+
+    static void OpenSettings() => (Current.MainWindow as IslandWindow)?.OpenSettings();
 
     /// <summary>Appends to %LocalAppData%\DynamicIsland\error.log (kept small) so a problem can be diagnosed afterwards.</summary>
     internal static void Log(string where, Exception? ex)

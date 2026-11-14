@@ -5,7 +5,7 @@ using System.Windows.Media;
 namespace DynamicIsland.Modules.Agents;
 
 /// <summary>What fills the expanded island when a footer button is selected.</summary>
-public enum ViewKind { Player, Agent, Screenshots, Clipboard, Ports, Power, Settings, Approval }
+public enum ViewKind { Player, Agent, Screenshots, Clipboard, Ports, Power, Approval }
 
 /// <summary>One footer button: the player, an assistant, screenshots, the clipboard, open ports or the power controls. Selecting it swaps the island's expanded content.</summary>
 abstract class TabEntry : INotifyPropertyChanged

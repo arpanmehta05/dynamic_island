@@ -6,7 +6,6 @@ using DynamicIsland.Modules.Approvals;
 using DynamicIsland.Modules.Clip;
 using DynamicIsland.Modules.Ports;
 using DynamicIsland.Modules.Power;
-using DynamicIsland.Modules.Settings;
 using DynamicIsland.Modules.Shots;
 
 namespace DynamicIsland.Modules.Agents;
@@ -34,7 +33,8 @@ class AgentsHub : INotifyPropertyChanged
     public ClipboardEntry Clipboard { get; }
     public PortsEntry Ports { get; }
     public PowerEntry Power { get; }
-    public SettingsEntry Settings { get; }
+    /// <summary>The buttons that can be switched off in the settings window.</summary>
+    public IReadOnlyList<TabEntry> Switchable { get; }
     public ApprovalEntry Approvals { get; }
     /// <summary>True while Claude Code is waiting for an answer: the island opens and stays open.</summary>
     public bool NeedsAttention => Approvals.IsAvailable;
@@ -48,7 +48,6 @@ class AgentsHub : INotifyPropertyChanged
     public bool ShowClipboard => Current.Kind == ViewKind.Clipboard;
     public bool ShowPorts => Current.Kind == ViewKind.Ports;
     public bool ShowPower => Current.Kind == ViewKind.Power;
-    public bool ShowSettings => Current.Kind == ViewKind.Settings;
     public bool ShowApproval => Current.Kind == ViewKind.Approval;
     public AgentInfo? SelectedAgent => Current as AgentInfo;
     public bool Expanded => _expanded;
@@ -77,9 +76,11 @@ class AgentsHub : INotifyPropertyChanged
         Ports = new PortsEntry();
         Power = new PowerEntry();
         TabEntry[] switchable = [new ClaudeAgent(), new CopilotAgent(), new ChatGptAgent(), Screenshots, Clipboard, Ports, Power];
-        Settings = new SettingsEntry(switchable);
+        Switchable = switchable;
+        ApplyHidden();
+        SettingsStore.Current.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(SettingsStore.HiddenTabs)) ApplyHidden(); };
         Approvals = new ApprovalEntry();
-        Items = [new PlayerEntry(media), Approvals, .. switchable, Settings];
+        Items = [new PlayerEntry(media), Approvals, .. switchable];
         Approvals.Attention += attention =>
         {
             if (attention) SelectIndex(Approvals.Index);
@@ -103,6 +104,12 @@ class AgentsHub : INotifyPropertyChanged
         RefreshAll();
     }
 
+    void ApplyHidden()
+    {
+        foreach (var tab in Switchable) tab.Hidden = SettingsStore.Current.IsHidden(tab.Name);
+        if (Items is not null && !Current.Shown) SelectIndex(0); // the button you were on was switched off
+    }
+
     void SelectIndex(int i)
     {
         if (i == _index) return;
@@ -111,7 +118,7 @@ class AgentsHub : INotifyPropertyChanged
         _index = i;
         Current.IsSelected = true;
         if (Current == Screenshots) Screenshots.MarkSeen();
-        Raise(nameof(ShowPlayer), nameof(ShowAgent), nameof(ShowScreenshots), nameof(ShowClipboard), nameof(ShowPorts), nameof(ShowPower), nameof(ShowSettings), nameof(ShowApproval), nameof(SelectedAgent), nameof(PetActive));
+        Raise(nameof(ShowPlayer), nameof(ShowAgent), nameof(ShowScreenshots), nameof(ShowClipboard), nameof(ShowPorts), nameof(ShowPower), nameof(ShowApproval), nameof(SelectedAgent), nameof(PetActive));
         if (_expanded) RefreshAll();
         TabChanged?.Invoke(Math.Sign(i - previous));
     }

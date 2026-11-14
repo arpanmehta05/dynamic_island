@@ -1,4 +1,4 @@
-# Removes Dynamic Island: stops it, removes start-with-Windows, the Start menu entry, the Settings > Apps entry and the program folder.
+# Removes Dynamic Island: stops it, removes start-with-Windows, the Start menu entries, the Settings > Apps entry and the program folder.
 # Settings > Apps runs this. It copies itself to a temp folder first, because it deletes the folder it lives in.
 param([switch]$Quiet, [switch]$Relaunched)
 
@@ -7,6 +7,7 @@ $dir    = Join-Path $env:LOCALAPPDATA 'Programs\DynamicIsland'
 $run    = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
 $uninst = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\DynamicIsland'
 $menu   = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Dynamic Island.lnk'
+$menuSettings = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Dynamic Island Settings.lnk'
 
 if (-not $Relaunched) {
     $copy = Join-Path $env:TEMP 'DynamicIsland-uninstall.ps1'
@@ -31,7 +32,7 @@ if ((Test-Path $vlcScript) -and (Test-Path (Join-Path $env:LOCALAPPDATA 'Dynamic
     & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $vlcScript -Disable | Out-Null
 }
 Remove-ItemProperty -Path $run -Name 'DynamicIsland' -ErrorAction SilentlyContinue
-Remove-Item $menu -Force -ErrorAction SilentlyContinue
+Remove-Item $menu, $menuSettings -Force -ErrorAction SilentlyContinue
 Remove-Item $uninst -Recurse -Force -ErrorAction SilentlyContinue
 if (Test-Path $dir) { Remove-Item $dir -Recurse -Force -ErrorAction SilentlyContinue }
 # the island's own data: settings, error log, screenshot copies

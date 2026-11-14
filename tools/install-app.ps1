@@ -12,6 +12,7 @@ $exe     = Join-Path $dir 'DynamicIsland.exe'
 $run     = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
 $uninst  = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\DynamicIsland'
 $menu    = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Dynamic Island.lnk'
+$menuSettings = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Dynamic Island Settings.lnk'
 $log     = Join-Path $env:TEMP 'DynamicIslandSetup.log'
 
 function Say($text, $icon = 'Information') {
@@ -46,11 +47,15 @@ try {
     New-Item -Path $run -Force | Out-Null
     Set-ItemProperty -Path $run -Name 'DynamicIsland' -Value "`"$exe`""
 
-    # Start menu entry
+    # Start menu entries (the island and its settings)
     New-Item -ItemType Directory -Path (Split-Path $menu) -Force | Out-Null
     $shell = New-Object -ComObject WScript.Shell
     $lnk = $shell.CreateShortcut($menu)
     $lnk.TargetPath = $exe; $lnk.WorkingDirectory = $dir; $lnk.IconLocation = "$exe,0"; $lnk.Description = $name
+    $lnk.Save()
+    # the settings app is the same program started with --settings (the running island opens its settings window)
+    $lnk = $shell.CreateShortcut($menuSettings)
+    $lnk.TargetPath = $exe; $lnk.Arguments = '--settings'; $lnk.WorkingDirectory = $dir; $lnk.IconLocation = "$exe,0"; $lnk.Description = "$name Settings"
     $lnk.Save()
 
     # Settings > Apps > Installed apps (with the uninstall button)

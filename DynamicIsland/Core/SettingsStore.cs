@@ -51,7 +51,9 @@ sealed class SettingsStore : INotifyPropertyChanged
     public bool HideInFullscreen { get => _hideInFullscreen; set { if (value == _hideInFullscreen) return; _hideInFullscreen = value; Changed(nameof(HideInFullscreen)); } }
 
     public bool IsHidden(string tab) => _hidden.Contains(tab);
-    public void SetHidden(string tab, bool hidden) { if (hidden ? _hidden.Add(tab) : _hidden.Remove(tab)) Changed(); }
+    public void SetHidden(string tab, bool hidden) { if (hidden ? _hidden.Add(tab) : _hidden.Remove(tab)) Changed(nameof(HiddenTabs)); }
+    /// <summary>Raised (as a property change) whenever a footer button is switched on or off.</summary>
+    public IReadOnlyCollection<string> HiddenTabs => _hidden;
 
     public event PropertyChangedEventHandler? PropertyChanged;
     public event Action? HotkeyChanged;

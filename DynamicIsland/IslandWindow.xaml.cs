@@ -9,6 +9,7 @@ using DynamicIsland.Core;
 using DynamicIsland.Modules;
 using DynamicIsland.Modules.Agents;
 using DynamicIsland.Modules.Hud;
+using DynamicIsland.Modules.Settings;
 using DynamicIsland.Modules.Shots;
 using DynamicIsland.Modules.Status;
 
@@ -48,7 +49,7 @@ public partial class IslandWindow : Window
         _battery.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(BatteryStatus.ShowIndicator)) FitPill(); };
         ((Storyboard)Resources["Show"]).Completed += (_, _) => { _pillWide = false; FitPill(); }; // the entrance always ends on the plain pill
         _banners.ShowingChanged += showing => { if (showing) ShowBanner(); else HideBanner(); };
-        DataContext = new { Clock = new ClockModule(), Media = _media, Agents = _agents, Hud = _hud, Power = _battery, Audio = _audio, Banners = _banners };
+        DataContext = new { Clock = new ClockModule(), Media = _media, Agents = _agents, Hud = _hud, Power = _battery, Audio = _audio, Banners = _banners, Settings = SettingsStore.Current };
         _agents.TabChanged += direction => Motion.SlideIn(MainBody, direction);
         _shrink.Tick += (_, _) => { _shrink.Stop(); Height = _restHeight; };
         _reset.Tick += (_, _) => { _reset.Stop(); if (!_open) _agents.ResetTab(); };
@@ -84,7 +85,7 @@ public partial class IslandWindow : Window
         {
             _hotkey = new Hotkey(HwndSource.FromHwnd(new WindowInteropHelper(this).Handle));
             _hotkey.Pressed += TogglePeek;
-            _tray = new TrayIcon(TogglePeek, Application.Current.Shutdown);
+            _tray = new TrayIcon(TogglePeek, OpenSettings, Application.Current.Shutdown);
             Application.Current.Exit += (_, _) => _tray.Dispose();
             _hotkey.Register(SettingsStore.Current.Hotkey);
             SettingsStore.Current.HotkeyChanged += () => _hotkey.Register(SettingsStore.Current.Hotkey);
@@ -104,6 +105,23 @@ public partial class IslandWindow : Window
             Microsoft.Win32.SystemEvents.PowerModeChanged += (_, _) => Dispatcher.BeginInvoke(() => WindowStyler.KeepOnTop(this));
             SetHidden(_fullscreen.IsFullscreen && SettingsStore.Current.HideInFullscreen);
         };
+    }
+
+    SettingsWindow? _settings;
+
+    /// <summary>The settings app: one window, brought to the front if it is already open.</summary>
+    public void OpenSettings()
+    {
+        if (_settings is null)
+        {
+            _settings = new SettingsWindow(new SettingsModel(_agents.Switchable));
+            _settings.Closed += (_, _) => _settings = null;
+            _settings.Show();
+        }
+        if (_settings.WindowState == WindowState.Minimized) _settings.WindowState = WindowState.Normal;
+        _settings.Topmost = true; // a plain Activate() from the background only flashes the taskbar
+        _settings.Topmost = false;
+        _settings.Activate();
     }
 
     void TogglePeek()

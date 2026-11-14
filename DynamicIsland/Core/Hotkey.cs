@@ -32,11 +32,26 @@ sealed class Hotkey
     public bool Register(string combo)
     {
         UnregisterHotKey(_source.Handle, HotkeyId);
-        var modifiers = MOD_NOREPEAT;
+        return Parse(combo, out var modifiers, out var vk) && RegisterHotKey(_source.Handle, HotkeyId, modifiers, vk);
+    }
+
+    /// <summary>Whether nobody owns this combination: tries it on <paramref name="window"/> and lets go again.</summary>
+    public static bool CanRegister(IntPtr window, string combo)
+    {
+        if (!Parse(combo, out var modifiers, out var vk) || !RegisterHotKey(window, HotkeyId + 1, modifiers, vk)) return false;
+        UnregisterHotKey(window, HotkeyId + 1);
+        return true;
+    }
+
+    static bool Parse(string combo, out int modifiers, out int vk)
+    {
+        modifiers = MOD_NOREPEAT;
+        vk = 0;
         var parts = combo.Split('+', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length < 2 || !Enum.TryParse<Key>(parts[^1], true, out var key)) return false;
         foreach (var part in parts[..^1])
             modifiers |= part.ToLowerInvariant() switch { "ctrl" => MOD_CONTROL, "alt" => MOD_ALT, "shift" => MOD_SHIFT, "win" => MOD_WIN, _ => 0 };
-        return RegisterHotKey(_source.Handle, HotkeyId, modifiers, KeyInterop.VirtualKeyFromKey(key));
+        vk = KeyInterop.VirtualKeyFromKey(key);
+        return true;
     }
 }

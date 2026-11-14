@@ -247,36 +247,6 @@
             </Setter>
         </Style>
 
-        <!-- One choice in a segmented control (Settings > Glass): the chosen one is the bright pill (Tag="selected") -->
-        <Style x:Key="Segment" TargetType="Button">
-            <Setter Property="Focusable" Value="False"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Foreground" Value="#A6FFFFFF"/>
-            <Setter Property="FontFamily" Value="{StaticResource InterSemiBold}"/>
-            <Setter Property="FontSize" Value="10.5"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Grid Height="22" Background="Transparent">
-                            <Border x:Name="Pill" CornerRadius="11" Background="#38FFFFFF" Opacity="0"/>
-                            <ContentPresenter Margin="8,0" HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}"/>
-                        </Grid>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True"><Setter Property="Foreground" Value="White"/></Trigger>
-                            <Trigger Property="Tag" Value="selected">
-                                <Setter Property="Foreground" Value="White"/>
-                                <Trigger.EnterActions><BeginStoryboard><Storyboard>
-                                    <DoubleAnimation Storyboard.TargetName="Pill" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.2"/>
-                                </Storyboard></BeginStoryboard></Trigger.EnterActions>
-                                <Trigger.ExitActions><BeginStoryboard><Storyboard>
-                                    <DoubleAnimation Storyboard.TargetName="Pill" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"/>
-                                </Storyboard></BeginStoryboard></Trigger.ExitActions>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
 
 
         <Style x:Key="LinkBtn" TargetType="Button">
@@ -475,7 +445,7 @@
                 <core:LiquidGlassEffect ImageSize="520,456"
                     Bounds="{Binding Rect, Source={x:Reference Shape}, Converter={StaticResource RectBounds}}"
                     Radius="{Binding RadiusX, Source={x:Reference Shape}}"
-                    Tint="{Binding Agents.Settings.Store.Tint}"/>
+                    Tint="{Binding Settings.Tint}"/>
             </Image.Effect>
         </Image>
 
@@ -1100,76 +1070,6 @@
                   </StackPanel>
                 </Grid>
 
-                <!-- Settings view: which buttons show, which glass (liquid / clear / frosted / dark), which key opens the island -->
-                <Grid Height="118" Margin="16,8,16,4" Visibility="{Binding Agents.ShowSettings, Converter={StaticResource BoolToVis}}">
-                    <Grid.RowDefinitions><RowDefinition Height="22"/><RowDefinition Height="*"/><RowDefinition Height="30"/></Grid.RowDefinitions>
-                    <TextBlock Text="Settings" Foreground="White" FontFamily="{StaticResource InterSemiBold}" FontSize="12.5" VerticalAlignment="Center"/>
-                    <TextBlock Text="Tap a button to show or hide it" Foreground="#8FFFFFFF" FontFamily="{StaticResource Inter}" FontSize="10.5" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                    <ItemsControl Grid.Row="1" ItemsSource="{Binding Agents.Settings.Toggles}" VerticalAlignment="Center">
-                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Button Style="{StaticResource ClipRow}" Width="88" Margin="0,0,4,5" Height="27"
-                                        Command="{Binding DataContext.Agents.Settings.Toggle, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}">
-                                    <!-- on = a bright pane with white text; off = a faint one with dim text -->
-                                    <Grid>
-                                        <Border Margin="-11,-6" CornerRadius="11" Background="White" IsHitTestVisible="False">
-                                            <Border.Style>
-                                                <Style TargetType="Border">
-                                                    <Setter Property="Opacity" Value="0"/>
-                                                    <Style.Triggers><DataTrigger Binding="{Binding IsOn}" Value="True"><Setter Property="Opacity" Value="0.14"/></DataTrigger></Style.Triggers>
-                                                </Style>
-                                            </Border.Style>
-                                        </Border>
-                                        <TextBlock Text="{Binding Name}" Foreground="White" FontFamily="{StaticResource InterSemiBold}" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="Opacity" Value="0.45"/>
-                                                    <Style.Triggers><DataTrigger Binding="{Binding IsOn}" Value="True"><Setter Property="Opacity" Value="1"/></DataTrigger></Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
-                                    </Grid>
-                                </Button>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                    <Grid Grid.Row="2">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="Glass" Foreground="#C8FFFFFF" FontFamily="{StaticResource Inter}" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <Border CornerRadius="13" Background="#14FFFFFF" Padding="2">
-                                <StackPanel Orientation="Horizontal">
-                                    <Button Content="Liquid" Command="{Binding Agents.Settings.SetGlass}" CommandParameter="0">
-                                        <Button.Style><Style TargetType="Button" BasedOn="{StaticResource Segment}"><Style.Triggers>
-                                            <DataTrigger Binding="{Binding Agents.Settings.Store.Glass}" Value="0"><Setter Property="Tag" Value="selected"/></DataTrigger>
-                                        </Style.Triggers></Style></Button.Style>
-                                    </Button>
-                                    <Button Content="Clear" Command="{Binding Agents.Settings.SetGlass}" CommandParameter="1">
-                                        <Button.Style><Style TargetType="Button" BasedOn="{StaticResource Segment}"><Style.Triggers>
-                                            <DataTrigger Binding="{Binding Agents.Settings.Store.Glass}" Value="1"><Setter Property="Tag" Value="selected"/></DataTrigger>
-                                        </Style.Triggers></Style></Button.Style>
-                                    </Button>
-                                    <Button Content="Frosted" Command="{Binding Agents.Settings.SetGlass}" CommandParameter="2">
-                                        <Button.Style><Style TargetType="Button" BasedOn="{StaticResource Segment}"><Style.Triggers>
-                                            <DataTrigger Binding="{Binding Agents.Settings.Store.Glass}" Value="2"><Setter Property="Tag" Value="selected"/></DataTrigger>
-                                        </Style.Triggers></Style></Button.Style>
-                                    </Button>
-                                    <Button Content="Dark" Command="{Binding Agents.Settings.SetGlass}" CommandParameter="3">
-                                        <Button.Style><Style TargetType="Button" BasedOn="{StaticResource Segment}"><Style.Triggers>
-                                            <DataTrigger Binding="{Binding Agents.Settings.Store.Glass}" Value="3"><Setter Property="Tag" Value="selected"/></DataTrigger>
-                                        </Style.Triggers></Style></Button.Style>
-                                    </Button>
-                                </StackPanel>
-                            </Border>
-                        </StackPanel>
-                        <Button Style="{StaticResource LinkBtn}" HorizontalAlignment="Right" VerticalAlignment="Center" Command="{Binding Agents.Settings.NextHotkey}" ToolTip="Tap to change the key that opens the island">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="Key " FontFamily="{StaticResource Inter}" FontSize="11" VerticalAlignment="Center"/>
-                                <Border CornerRadius="6" Background="#26FFFFFF" Padding="7,2"><TextBlock Text="{Binding Agents.Settings.Store.Hotkey}" Foreground="White" FontFamily="{StaticResource InterSemiBold}" FontSize="10.5"/></Border>
-                            </StackPanel>
-                        </Button>
-                    </Grid>
-                </Grid>
               </Grid>
 
               <!-- Footer: four buttons and nothing else. Each one switches the whole expanded island to that view. -->
