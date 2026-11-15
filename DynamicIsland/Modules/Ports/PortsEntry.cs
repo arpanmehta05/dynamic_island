@@ -63,7 +63,7 @@ sealed class PortsEntry : TabEntry
     {
         "onedrive", "onedrive.sync.service", "chrome", "msedge", "msedgewebview2", "firefox", "brave", "opera", "vivaldi",
         "discord", "spotify", "slack", "teams", "ms-teams", "whatsapp", "telegram", "zoom", "steam", "steamwebhelper",
-        "epicgameslauncher", "claude", "chatgpt", "codex", "code", "cursor", "windsurf", "dropbox", "googledrivefs",
+        "epicgameslauncher", "claude", "chatgpt", "codex", "code", "cursor", "windsurf", "antigravity", "language_server", "agy", "dropbox", "googledrivefs",
         "dynamicisland", "searchhost", "yourphone", "phoneexperiencehost", "widgets", "rdpclip", "dllhost", "runtimebroker",
     };
 

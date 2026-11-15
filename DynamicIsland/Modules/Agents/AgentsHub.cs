@@ -11,7 +11,7 @@ using DynamicIsland.Modules.Shots;
 namespace DynamicIsland.Modules.Agents;
 
 /// <summary>
-/// The footer buttons (Player, Claude, Copilot, ChatGPT, Screenshots, Clipboard, Ports, Power), which one is selected, and the refresh
+/// The footer buttons (Player, Claude, Copilot, Antigravity, ChatGPT, Screenshots, Clipboard, Ports, Power), which one is selected, and the refresh
 /// of everything that watches the system: every second while the island is expanded, every few seconds while collapsed (so the notch
 /// can show that an assistant is working). Buttons that have nothing to show (an assistant that isn't open, no recent screenshot,
 /// no extra open port) are hidden.
@@ -75,7 +75,7 @@ class AgentsHub : INotifyPropertyChanged
         Clipboard = new ClipboardEntry(ClipboardMonitor);
         Ports = new PortsEntry();
         Power = new PowerEntry();
-        TabEntry[] switchable = [new ClaudeAgent(), new CopilotAgent(), new ChatGptAgent(), Screenshots, Clipboard, Ports, Power];
+        TabEntry[] switchable = [new ClaudeAgent(), new CopilotAgent(), new AntigravityAgent(), new ChatGptAgent(), Screenshots, Clipboard, Ports, Power];
         Switchable = switchable;
         ApplyHidden();
         SettingsStore.Current.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(SettingsStore.HiddenTabs)) ApplyHidden(); };

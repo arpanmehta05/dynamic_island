@@ -29,6 +29,7 @@ sealed class SettingsModel : INotifyPropertyChanged
     {
         ["Claude"] = "What Claude Code and the Claude app are doing, and their questions",
         ["Copilot"] = "GitHub Copilot Chat in VS Code, while a chat is running",
+        ["Antigravity"] = "Google Antigravity, while its agent is working",
         ["ChatGPT"] = "The ChatGPT app, while it is working on something",
         ["Screenshots"] = "Your newest screenshots, ready to drag into any app",
         ["Clipboard"] = "Recent text copies, click one to paste it",
